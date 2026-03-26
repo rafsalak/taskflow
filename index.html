@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%236366F1'/><rect x='5' y='5' width='10' height='10' rx='2' fill='white'/><rect x='17' y='5' width='10' height='10' rx='2' fill='white' opacity='0.6'/><rect x='5' y='17' width='10' height='10' rx='2' fill='white' opacity='0.6'/><rect x='17' y='17' width='10' height='10' rx='2' fill='white' opacity='0.3'/></svg>">
 <title>TaskFlow</title>
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -1312,14 +1313,32 @@ async function renderBoard(boardId) {
   const container = document.getElementById('board-view-container');
   container.innerHTML = '<div class="loading-dots"><span></span><span></span><span></span></div>';
 
-  const { data: columns, error: boardError } = await sb.from('columns')
-    .select('id, name, color, position, tasks(id, title, description, due_date, assignee_name, labels, position, column_id, created_by)')
-    .eq('board_id', boardId)
-    .order('position')
-    .order('position', { referencedTable: 'tasks' });
+  // Timeout wrapper — if Supabase hangs for >8s, show an error with retry
+  let columns, boardError;
+  try {
+    const timeout = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error('Request timed out — tap to retry')), 8000)
+    );
+    const query = sb.from('columns')
+      .select('id, name, color, position, tasks(id, title, description, due_date, assignee_name, labels, position, column_id, created_by)')
+      .eq('board_id', boardId)
+      .order('position')
+      .order('position', { referencedTable: 'tasks' });
+    const result = await Promise.race([query, timeout]);
+    columns = result.data;
+    boardError = result.error;
+  } catch (e) {
+    container.innerHTML = `<div class="empty-state">
+      <div class="empty-state-icon" style="font-size:32px">⏱️</div>
+      <h3>Board took too long to load</h3>
+      <p style="margin-bottom:16px">This can happen after switching tabs. Tap below to retry.</p>
+      <button class="btn btn-primary" style="width:auto;padding:10px 20px" onclick="renderBoard('${boardId}')">Retry</button>
+    </div>`;
+    return;
+  }
 
   if (boardError) {
-    container.innerHTML = `<div class="empty-state"><div class="empty-state-icon" style="font-size:32px">⚠️</div><h3>Failed to load board</h3><p>${boardError.message}</p></div>`;
+    container.innerHTML = `<div class="empty-state"><div class="empty-state-icon" style="font-size:32px">⚠️</div><h3>Failed to load board</h3><p>${boardError.message}</p><button class="btn btn-primary" style="width:auto;padding:10px 20px;margin-top:16px" onclick="renderBoard('${boardId}')">Retry</button></div>`;
     return;
   }
 
@@ -1881,22 +1900,30 @@ document.addEventListener('keydown', e => {
 // ─── START ───
 init();
 
-// Fix tab visibility: refresh session when user returns to tab
+// Tab visibility: refresh session + only re-render board if hidden for >60s
+let tabHiddenAt = null;
 document.addEventListener('visibilitychange', async () => {
-  if (document.visibilityState === 'visible') {
-    const { data: { session } } = await sb.auth.getSession();
-    if (!session && currentUser) {
-      // session expired while tab was hidden — try refresh
-      const { data } = await sb.auth.refreshSession();
-      if (!data.session) {
-        showAuthScreen();
-        return;
-      }
+  if (document.visibilityState === 'hidden') {
+    tabHiddenAt = Date.now();
+    return;
+  }
+
+  // Tab became visible
+  const hiddenMs = tabHiddenAt ? Date.now() - tabHiddenAt : 0;
+  tabHiddenAt = null;
+
+  // Always refresh the auth session silently
+  try {
+    const { data, error } = await sb.auth.refreshSession();
+    if (error || !data.session) {
+      if (currentUser) { showAuthScreen(); return; }
     }
-    // re-render current board if one was open
-    if (currentBoardId) {
-      await renderBoard(currentBoardId);
-    }
+  } catch(e) { /* ignore refresh errors */ }
+
+  // Only re-render the board if tab was hidden for more than 60 seconds
+  // Avoids triggering a fetch on a quick alt+tab
+  if (currentBoardId && hiddenMs > 60000) {
+    await renderBoard(currentBoardId);
   }
 });
 </script>
