@@ -1312,10 +1312,16 @@ async function renderBoard(boardId) {
   const container = document.getElementById('board-view-container');
   container.innerHTML = '<div class="loading-dots"><span></span><span></span><span></span></div>';
 
-  const { data: columns } = await sb.from('columns')
-    .select('*, tasks(*)')
+  const { data: columns, error: boardError } = await sb.from('columns')
+    .select('id, name, color, position, tasks(id, title, description, due_date, assignee_name, labels, position, column_id, created_by)')
     .eq('board_id', boardId)
-    .order('position');
+    .order('position')
+    .order('position', { referencedTable: 'tasks' });
+
+  if (boardError) {
+    container.innerHTML = `<div class="empty-state"><div class="empty-state-icon" style="font-size:32px">⚠️</div><h3>Failed to load board</h3><p>${boardError.message}</p></div>`;
+    return;
+  }
 
   if (!columns || columns.length === 0) {
     container.innerHTML = `
@@ -1874,6 +1880,25 @@ document.addEventListener('keydown', e => {
 
 // ─── START ───
 init();
+
+// Fix tab visibility: refresh session when user returns to tab
+document.addEventListener('visibilitychange', async () => {
+  if (document.visibilityState === 'visible') {
+    const { data: { session } } = await sb.auth.getSession();
+    if (!session && currentUser) {
+      // session expired while tab was hidden — try refresh
+      const { data } = await sb.auth.refreshSession();
+      if (!data.session) {
+        showAuthScreen();
+        return;
+      }
+    }
+    // re-render current board if one was open
+    if (currentBoardId) {
+      await renderBoard(currentBoardId);
+    }
+  }
+});
 </script>
 
 </body>
