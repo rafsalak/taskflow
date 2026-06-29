@@ -981,31 +981,115 @@
   .card-indicator svg { width: 11px; height: 11px; }
   .card-indicator.done { color: var(--accent-3); }
 
-  /* ─── TASK DETAIL TABS ─── */
-  .detail-tabs {
+  /* ─── TASK DETAIL — SINGLE PAGE LAYOUT ─── */
+  .task-detail-modal {
+    max-width: 720px !important;
     display: flex;
-    gap: 0;
-    border-bottom: 1.5px solid var(--border);
-    padding: 0 24px;
-    margin-bottom: 0;
+    flex-direction: column;
+    max-height: 90vh;
   }
 
-  .detail-tab {
-    padding: 10px 16px;
-    font-size: 13px;
+  .task-detail-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0 28px 8px;
+    scroll-behavior: smooth;
+  }
+
+  .task-detail-body::-webkit-scrollbar { width: 5px; }
+  .task-detail-body::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 4px; }
+
+  .task-detail-footer {
+    padding: 12px 28px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--surface);
+    flex-shrink: 0;
+    border-radius: 0 0 16px 16px;
+  }
+
+  .detail-meta-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 16px;
+    padding: 16px 0;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 20px;
+  }
+
+  .detail-section {
+    margin-bottom: 22px;
+  }
+
+  .detail-section-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-3);
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .detail-section-action {
+    font-size: 11px;
     font-weight: 500;
     color: var(--text-3);
     cursor: pointer;
-    border-bottom: 2px solid transparent;
-    margin-bottom: -1.5px;
-    transition: color 0.12s;
+    text-transform: none;
+    letter-spacing: 0;
+    padding: 2px 6px;
+    border-radius: 4px;
+    transition: all 0.12s;
   }
 
-  .detail-tab:hover { color: var(--text-2); }
-  .detail-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+  .detail-section-action:hover { color: var(--accent); background: var(--accent-light); }
 
-  .detail-tab-content { display: none; padding: 20px 24px; }
-  .detail-tab-content.active { display: block; }
+  .detail-meta-input {
+    border: 1.5px solid var(--border);
+    border-radius: 6px;
+    padding: 6px 9px;
+    font-size: 13px;
+    font-family: var(--font);
+    color: var(--text);
+    background: var(--bg);
+    outline: none;
+    transition: border-color 0.15s;
+    width: 100%;
+  }
+
+  .detail-meta-input:focus { border-color: var(--accent); background: var(--surface); }
+
+  .detail-desc-input {
+    width: 100%;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-family: var(--font);
+    font-size: 13.5px;
+    color: var(--text);
+    background: var(--bg);
+    outline: none;
+    resize: vertical;
+    min-height: 80px;
+    line-height: 1.6;
+    transition: border-color 0.15s;
+  }
+
+  .detail-desc-input:focus { border-color: var(--accent); background: var(--surface); }
+
+  .detail-divider {
+    height: 1px;
+    background: var(--border);
+    margin: 4px 0 20px;
+  }
+
+  /* keep tab functions available but unused */
+  .detail-tab-content { display: block; }
 
   /* ─── CHECKLISTS ─── */
   .checklist-block { margin-bottom: 20px; }
@@ -1338,6 +1422,55 @@
   }
 
   .hidden { display: none !important; }
+
+  /* ─── START DATE CHIP ─── */
+  .task-start { color: var(--text-3); }
+
+  /* ─── ACTIVITY LOG ─── */
+  .activity-list { display: flex; flex-direction: column; }
+
+  .activity-item {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    padding: 9px 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .activity-item:last-child { border-bottom: none; }
+
+  .activity-avatar {
+    width: 26px; height: 26px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #A78BFA, #6366F1);
+    display: flex; align-items: center; justify-content: center;
+    color: white;
+    font-size: 10px;
+    font-weight: 600;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  .activity-body { flex: 1; }
+
+  .activity-text {
+    font-size: 13px;
+    color: var(--text-2);
+    line-height: 1.4;
+  }
+
+  .activity-text strong { color: var(--text); font-weight: 600; }
+
+  .activity-detail {
+    color: var(--accent);
+    font-style: italic;
+  }
+
+  .activity-time {
+    font-size: 11.5px;
+    color: var(--text-3);
+    margin-top: 2px;
+  }
 
   /* ─── CONTEXT MENU ─── */
   .ctx-menu {
@@ -1901,7 +2034,7 @@ async function renderBoard(boardId) {
     let taskData = [];
     if (colIds.length > 0) {
       const taskResult = await sb.from('tasks')
-        .select('id, title, description, due_date, assignee_name, labels, position, column_id, created_by')
+        .select('id, title, description, due_date, start_date, assignee_name, labels, position, column_id, created_by')
         .in('column_id', colIds)
         .order('position');
       if (taskResult.error) throw new Error(taskResult.error.message);
@@ -2001,6 +2134,7 @@ function renderColumn(col) {
 
 function renderTaskCard(task) {
   const labels = task.labels || [];
+  const startDate = task.start_date ? formatStart(task.start_date) : null;
   const dueDate = task.due_date ? formatDue(task.due_date) : null;
   const initials = task.assignee_name ? task.assignee_name.slice(0,2).toUpperCase() : null;
   const checkTotal = task._checkTotal || 0;
@@ -2022,6 +2156,10 @@ function renderTaskCard(task) {
         </div>` : ''}
       <div class="task-card-title">${escHtml(task.title)}</div>
       <div class="task-card-footer">
+        ${startDate ? `<div class="task-due task-start" title="Start date">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><circle cx="6" cy="6" r="4.5" stroke="currentColor" stroke-width="1.2"/><path d="M6 3.5V6l1.5 1.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+          ${startDate}
+        </div>` : ''}
         ${dueDate ? `<div class="task-due ${dueDate.cls}">
           <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><rect x="1" y="2" width="10" height="9" rx="1.5" stroke="currentColor" stroke-width="1.2"/><path d="M4 1V3M8 1V3M1 5H11" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
           ${dueDate.label}
@@ -2053,6 +2191,11 @@ function formatDue(dateStr) {
   return { label: due.toLocaleDateString('en', { month:'short', day:'numeric' }), cls: '' };
 }
 
+function formatStart(dateStr) {
+  const d = new Date(dateStr);
+  return d.toLocaleDateString('en', { month: 'short', day: 'numeric' });
+}
+
 // ─── TASK DETAIL ───
 async function openTask(taskId) {
   let task = boardCache[currentBoardId]?.[taskId];
@@ -2063,9 +2206,13 @@ async function openTask(taskId) {
   if (!task) return;
 
   const labels = task.labels || [];
+  const userInitials = (currentUser?.user_metadata?.full_name || currentUser?.email || 'U').slice(0,2).toUpperCase();
+
   createModal('task-detail', `
-    <div class="modal task-detail-modal" style="max-width:680px">
-      <div class="modal-header" style="padding-bottom:12px">
+    <div class="modal task-detail-modal">
+
+      <!-- Header -->
+      <div class="modal-header" style="padding:20px 28px 16px;border-bottom:1px solid var(--border);flex-shrink:0">
         <div style="flex:1">
           <textarea class="task-detail-title" id="detail-title" rows="1" oninput="autoResize(this)">${escHtml(task.title)}</textarea>
         </div>
@@ -2074,98 +2221,195 @@ async function openTask(taskId) {
         </div>
       </div>
 
-      <div class="detail-tabs">
-        <div class="detail-tab active" onclick="switchDetailTab(this,'tab-details')">Details</div>
-        <div class="detail-tab" onclick="switchDetailTab(this,'tab-checklist')">Checklist</div>
-        <div class="detail-tab" onclick="switchDetailTab(this,'tab-comments')">Comments</div>
-        <div class="detail-tab" onclick="switchDetailTab(this,'tab-fields')">Custom Fields</div>
-        <div class="detail-tab" onclick="switchDetailTab(this,'tab-attachments')">Attachments</div>
-      </div>
+      <!-- Scrollable body -->
+      <div class="task-detail-body">
 
-      <!-- TAB: Details -->
-      <div id="tab-details" class="detail-tab-content active">
-        <div class="task-detail-meta">
+        <!-- Dates + Assignee -->
+        <div class="detail-meta-row">
+          <div class="meta-item">
+            <div class="meta-label">Start date</div>
+            <input type="date" id="detail-start" value="${task.start_date || ''}" class="detail-meta-input">
+          </div>
           <div class="meta-item">
             <div class="meta-label">Due date</div>
-            <input type="date" id="detail-due" value="${task.due_date || ''}" style="border:1.5px solid var(--border);border-radius:6px;padding:5px 8px;font-size:13px;font-family:var(--font);outline:none;color:var(--text);background:var(--bg)">
+            <input type="date" id="detail-due" value="${task.due_date || ''}" class="detail-meta-input">
           </div>
           <div class="meta-item">
             <div class="meta-label">Assignee</div>
-            <input type="text" id="detail-assignee" placeholder="Name" value="${escHtml(task.assignee_name || '')}" style="border:1.5px solid var(--border);border-radius:6px;padding:5px 8px;font-size:13px;font-family:var(--font);width:100%;outline:none;color:var(--text);background:var(--bg)">
+            <input type="text" id="detail-assignee" placeholder="Name" value="${escHtml(task.assignee_name || '')}" class="detail-meta-input">
           </div>
         </div>
-        <div class="meta-label" style="margin-bottom:8px">Labels</div>
-        <div class="label-colors">
-          ${LABEL_OPTIONS.map(l => `
-            <div class="label-chip ${labels.includes(l.name) ? 'selected' : ''}"
-              style="background:${l.bg};color:${l.color}"
-              onclick="toggleLabel(this,'${l.name}')"
-              data-label="${l.name}">
-              ${l.name}
-            </div>
-          `).join('')}
+
+        <!-- Labels -->
+        <div class="detail-section">
+          <div class="detail-section-label">Labels</div>
+          <div class="label-colors">
+            ${LABEL_OPTIONS.map(l => `
+              <div class="label-chip ${labels.includes(l.name) ? 'selected' : ''}"
+                style="background:${l.bg};color:${l.color}"
+                onclick="toggleLabel(this,'${l.name}')"
+                data-label="${l.name}">
+                ${l.name}
+              </div>
+            `).join('')}
+          </div>
         </div>
-        <div class="meta-label" style="margin-top:18px;margin-bottom:8px">Description</div>
-        <textarea id="detail-desc" placeholder="Add a description..." style="width:100%;border:1.5px solid var(--border);border-radius:8px;padding:10px 12px;font-family:var(--font);font-size:13.5px;color:var(--text);background:var(--bg);outline:none;resize:vertical;min-height:100px;line-height:1.6">${escHtml(task.description || '')}</textarea>
-        <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:16px">
-          <button class="btn btn-ghost btn-sm" onclick="deleteTask('${task.id}')">Delete task</button>
-          <button class="btn btn-ghost btn-sm" onclick="closeModal()">Cancel</button>
-          <button class="btn btn-primary btn-sm" style="width:auto;margin-top:0" onclick="saveTask('${task.id}')">Save changes</button>
+
+        <!-- Description -->
+        <div class="detail-section">
+          <div class="detail-section-label">Description</div>
+          <textarea id="detail-desc" class="detail-desc-input" placeholder="Add a description…">${escHtml(task.description || '')}</textarea>
         </div>
+
+        <!-- Custom Fields (rendered by renderDetailCustomFields) -->
+        <div id="custom-fields-section"></div>
+
+        <!-- Checklists -->
+        <div id="checklists-container"></div>
+        <div style="margin-bottom:22px">
+          <button class="btn btn-ghost btn-sm" onclick="addChecklist('${task.id}')">
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M6 1v10M1 6h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+            Add checklist
+          </button>
+        </div>
+
+        <!-- Attachments -->
+        <div class="detail-section">
+          <div class="detail-section-label">Attachments</div>
+          <div id="attachments-container"></div>
+          <div class="drop-zone" id="drop-zone-${task.id}" onclick="document.getElementById('file-input-${task.id}').click()"
+            ondragover="event.preventDefault();this.classList.add('dragover')"
+            ondragleave="this.classList.remove('dragover')"
+            ondrop="handleFileDrop(event,'${task.id}')">
+            <input type="file" id="file-input-${task.id}" multiple onchange="handleFileSelect(event,'${task.id}')">
+            <svg width="18" height="18" viewBox="0 0 20 20" fill="none" style="margin:0 auto 5px;display:block"><path d="M10 13V4M10 4L7 7M10 4L13 7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M3 14v2a1 1 0 001 1h12a1 1 0 001-1v-2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+            Click or drag files to attach
+          </div>
+        </div>
+
+        <!-- Activity feed (comments + log, merged) -->
+        <div class="detail-section">
+          <div class="detail-section-label">Activity</div>
+          <div id="activity-feed" style="margin-bottom:16px"></div>
+          <div class="comment-input-row">
+            <div class="comment-avatar">${userInitials}</div>
+            <textarea id="new-comment-text" placeholder="Write a comment…" rows="1" oninput="autoResize(this)"></textarea>
+            <button class="btn btn-primary btn-sm" style="width:auto;margin:0;align-self:flex-end" onclick="postComment('${task.id}')">Post</button>
+          </div>
+        </div>
+
       </div>
 
-      <!-- TAB: Checklist -->
-      <div id="tab-checklist" class="detail-tab-content">
-        <div id="checklists-container"><div style="color:var(--text-3);font-size:13px">Loading…</div></div>
-        <button class="btn btn-ghost btn-sm" style="margin-top:12px" onclick="addChecklist('${task.id}')">
-          + Add checklist
-        </button>
-      </div>
-
-      <!-- TAB: Comments -->
-      <div id="tab-comments" class="detail-tab-content">
-        <div id="comments-container"><div style="color:var(--text-3);font-size:13px">Loading…</div></div>
-        <div class="comment-input-row">
-          <div class="comment-avatar">${((currentUser?.user_metadata?.full_name || currentUser?.email || 'U').slice(0,2).toUpperCase())}</div>
-          <textarea id="new-comment-text" placeholder="Write a comment…" rows="1" oninput="autoResize(this)"></textarea>
-          <button class="btn btn-primary btn-sm" style="width:auto;margin:0;align-self:flex-end" onclick="postComment('${task.id}')">Post</button>
-        </div>
-      </div>
-
-      <!-- TAB: Custom Fields -->
-      <div id="tab-fields" class="detail-tab-content">
-        <div id="custom-fields-container"><div style="color:var(--text-3);font-size:13px">Loading…</div></div>
-        <div class="cf-manage-btn" onclick="showManageFieldsModal('${currentBoardId}','${task.id}')">⚙ Manage fields for this board</div>
-      </div>
-
-      <!-- TAB: Attachments -->
-      <div id="tab-attachments" class="detail-tab-content">
-        <div id="attachments-container"><div style="color:var(--text-3);font-size:13px">Loading…</div></div>
-        <div class="drop-zone" id="drop-zone-${task.id}" onclick="document.getElementById('file-input-${task.id}').click()"
-          ondragover="event.preventDefault();this.classList.add('dragover')"
-          ondragleave="this.classList.remove('dragover')"
-          ondrop="handleFileDrop(event,'${task.id}')">
-          <input type="file" id="file-input-${task.id}" multiple onchange="handleFileSelect(event,'${task.id}')">
-          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" style="margin:0 auto 6px;display:block"><path d="M10 13V4M10 4L7 7M10 4L13 7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M3 14v2a1 1 0 001 1h12a1 1 0 001-1v-2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-          Click or drag files to attach
-        </div>
+      <!-- Sticky footer -->
+      <div class="task-detail-footer">
+        <button class="btn btn-ghost btn-sm" style="color:var(--danger)" onclick="deleteTask('${task.id}')">Delete</button>
+        <div style="flex:1"></div>
+        <button class="btn btn-ghost btn-sm" onclick="closeModal()">Cancel</button>
+        <button class="btn btn-primary btn-sm" style="width:auto;margin:0" onclick="saveTask('${task.id}')">Save changes</button>
       </div>
     </div>
   `);
 
   autoResize(document.getElementById('detail-title'));
-  // Load checklist, comments, fields, attachments lazily
-  loadChecklists(task.id);
-  loadComments(task.id);
-  loadCustomFieldValues(task.id, currentBoardId);
-  loadAttachments(task.id);
+
+  // Load all data in parallel
+  const [clRes, cfRes, cfvRes, atRes] = await Promise.all([
+    sb.from('checklists').select('id, name, position, checklist_items(id, title, checked, due_date, position)').eq('task_id', task.id).order('position'),
+    sb.from('custom_fields').select('*').eq('board_id', currentBoardId).order('position'),
+    sb.from('custom_field_values').select('*').eq('task_id', task.id),
+    sb.from('attachments').select('*').eq('task_id', task.id).order('created_at'),
+  ]);
+
+  renderDetailChecklists(clRes.data || [], task.id);
+  renderDetailCustomFields(cfRes.data || [], cfvRes.data || [], task.id);
+  renderDetailAttachments(atRes.data || [], task.id);
+  loadActivityFeed(task.id);
 }
 
 function switchDetailTab(el, tabId) {
-  document.querySelectorAll('.detail-tab').forEach(t => t.classList.remove('active'));
-  document.querySelectorAll('.detail-tab-content').forEach(t => t.classList.remove('active'));
-  el.classList.add('active');
-  document.getElementById(tabId)?.classList.add('active');
+  // kept for backward compat; no-op in single-page layout
+}
+
+// Render checklists directly into #checklists-container (replaces lazy loadChecklists)
+function renderDetailChecklists(checklists, taskId) {
+  const el = document.getElementById('checklists-container');
+  if (!el) return;
+  if (!checklists.length) { el.innerHTML = ''; return; }
+  el.innerHTML = `
+    <div class="detail-section">
+      <div class="detail-section-label">Checklists</div>
+      ${checklists.map(cl => renderChecklist(cl)).join('')}
+    </div>`;
+}
+
+// Render custom fields inline (replaces tab-based loadCustomFieldValues)
+function renderDetailCustomFields(fields, values, taskId) {
+  const el = document.getElementById('custom-fields-section');
+  if (!el) return;
+  if (!fields.length) { el.innerHTML = ''; return; }
+
+  const valMap = {};
+  for (const v of values) valMap[v.custom_field_id] = v.value || '';
+
+  const rows = fields.map(f => {
+    const val = valMap[f.id] || '';
+    let input = '';
+    if (f.field_type === 'text') {
+      input = `<input class="cf-value" type="text" value="${escHtml(val)}" placeholder="—" onchange="saveCFValue('${taskId}','${f.id}',this.value)">`;
+    } else if (f.field_type === 'number') {
+      input = `<input class="cf-value" type="number" value="${escHtml(val)}" placeholder="—" onchange="saveCFValue('${taskId}','${f.id}',this.value)">`;
+    } else if (f.field_type === 'date') {
+      input = `<input class="cf-value" type="date" value="${escHtml(val)}" onchange="saveCFValue('${taskId}','${f.id}',this.value)">`;
+    } else if (f.field_type === 'dropdown') {
+      const opts = f.options || [];
+      input = `<select class="cf-value" onchange="saveCFValue('${taskId}','${f.id}',this.value)">
+        <option value="">— select —</option>
+        ${opts.map(o => `<option value="${escHtml(o)}" ${val===o?'selected':''}>${escHtml(o)}</option>`).join('')}
+      </select>`;
+    }
+    return `<div class="custom-field-row"><div class="cf-name">${escHtml(f.name)}</div>${input}</div>`;
+  }).join('');
+
+  el.innerHTML = `
+    <div class="detail-section">
+      <div class="detail-section-label">
+        Custom Fields
+        <span class="detail-section-action" onclick="showManageFieldsModal('${currentBoardId}','${taskId}')">⚙ Manage</span>
+      </div>
+      ${rows}
+    </div>`;
+}
+
+// Render attachments inline
+function renderDetailAttachments(attachments, taskId) {
+  const el = document.getElementById('attachments-container');
+  if (!el) return;
+  if (!attachments.length) { el.innerHTML = ''; return; }
+  el.innerHTML = `<div class="attachment-list" style="margin-bottom:10px">${attachments.map(a => renderAttachment(a)).join('')}</div>`;
+}
+
+// Merged comments + activity feed
+async function loadActivityFeed(taskId) {
+  const el = document.getElementById('activity-feed');
+  if (!el) return;
+
+  const [cmRes, acRes] = await Promise.all([
+    sb.from('comments').select('*').eq('task_id', taskId).order('created_at'),
+    sb.from('activity_log').select('*').eq('task_id', taskId).order('created_at'),
+  ]);
+
+  const comments = (cmRes.data || []).map(c => ({ ...c, _type: 'comment' }));
+  const activities = (acRes.data || []).map(a => ({ ...a, _type: 'activity' }));
+  const feed = [...comments, ...activities].sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+
+  if (!feed.length) {
+    el.innerHTML = `<div style="color:var(--text-3);font-size:13px">No activity yet.</div>`;
+    return;
+  }
+
+  el.innerHTML = feed.map(item =>
+    item._type === 'comment' ? renderComment(item) : renderActivityItem(item)
+  ).join('');
 }
 
 function toggleLabel(el, name) {
@@ -2175,13 +2419,15 @@ function toggleLabel(el, name) {
 async function saveTask(taskId) {
   const title = document.getElementById('detail-title').value.trim();
   const desc = document.getElementById('detail-desc').value.trim();
+  const startDate = document.getElementById('detail-start').value || null;
   const dueDate = document.getElementById('detail-due').value || null;
   const assignee = document.getElementById('detail-assignee').value.trim() || null;
   const labels = [...document.querySelectorAll('.label-chip.selected')].map(el => el.dataset.label);
 
   if (!title) { toast('Title cannot be empty'); return; }
 
-  await sb.from('tasks').update({ title, description: desc, due_date: dueDate, assignee_name: assignee, labels }).eq('id', taskId);
+  await sb.from('tasks').update({ title, description: desc, start_date: startDate, due_date: dueDate, assignee_name: assignee, labels }).eq('id', taskId);
+  await logActivity(taskId, 'updated this task', null);
   delete boardCache[currentBoardId]; // invalidate cache
   closeModal();
   await renderBoard(currentBoardId);
@@ -2225,10 +2471,22 @@ async function onDrop(e, columnId) {
   e.preventDefault();
   if (!dragTask) return;
 
-  const { data: tasks } = await sb.from('tasks').select('*').eq('column_id', columnId).order('position');
+  // Capture column names before re-render wipes the DOM
+  const taskData = boardCache[currentBoardId]?.[dragTask];
+  const oldColName = taskData
+    ? document.querySelector(`.column[data-column-id="${taskData.column_id}"] .column-title`)?.textContent?.trim()
+    : null;
+  const newColName = document.querySelector(`.column[data-column-id="${columnId}"] .column-title`)?.textContent?.trim() || 'a column';
+
+  const { data: tasks } = await sb.from('tasks').select('position').eq('column_id', columnId).order('position');
   const maxPos = tasks && tasks.length ? Math.max(...tasks.map(t => t.position || 0)) + 1 : 0;
 
   await sb.from('tasks').update({ column_id: columnId, position: maxPos }).eq('id', dragTask);
+
+  if (oldColName && oldColName !== newColName) {
+    await logActivity(dragTask, 'moved task', `"${oldColName}" → "${newColName}"`);
+  }
+
   delete boardCache[currentBoardId]; // invalidate cache
   await renderBoard(currentBoardId);
 }
@@ -2422,6 +2680,10 @@ function showNewTaskModal(columnId) {
             </select>
           </div>
           <div class="modal-field">
+            <label>Start date</label>
+            <input type="date" id="new-task-start">
+          </div>
+          <div class="modal-field">
             <label>Due date</label>
             <input type="date" id="new-task-due">
           </div>
@@ -2450,6 +2712,7 @@ function showNewTaskModal(columnId) {
 async function createTask() {
   const title = document.getElementById('new-task-title').value.trim();
   const colId = document.getElementById('new-task-col').value;
+  const start = document.getElementById('new-task-start').value || null;
   const due = document.getElementById('new-task-due').value || null;
   const assignee = document.getElementById('new-task-assignee').value.trim() || null;
   const labels = [...document.querySelectorAll('.label-chip.selected')].map(el => el.dataset.label);
@@ -2459,7 +2722,10 @@ async function createTask() {
   const { data: tasks } = await sb.from('tasks').select('position').eq('column_id', colId).order('position', { ascending: false }).limit(1);
   const pos = tasks && tasks.length ? (tasks[0].position || 0) + 1 : 0;
 
-  await sb.from('tasks').insert({ title, column_id: colId, due_date: due, assignee_name: assignee, labels, position: pos, created_by: currentUser.id });
+  const { data: newTask } = await sb.from('tasks')
+    .insert({ title, column_id: colId, start_date: start, due_date: due, assignee_name: assignee, labels, position: pos, created_by: currentUser.id })
+    .select('id').single();
+  if (newTask) await logActivity(newTask.id, 'created this task', null);
   delete boardCache[currentBoardId]; // invalidate cache
   closeModal();
   await renderBoard(currentBoardId);
@@ -2808,16 +3074,7 @@ async function loadChecklists(taskId) {
     .select('id, name, position, checklist_items(id, title, checked, due_date, position)')
     .eq('task_id', taskId)
     .order('position');
-
-  const el = document.getElementById('checklists-container');
-  if (!el) return;
-
-  if (!checklists || !checklists.length) {
-    el.innerHTML = `<div style="color:var(--text-3);font-size:13px">No checklists yet. Add one below.</div>`;
-    return;
-  }
-
-  el.innerHTML = checklists.map(cl => renderChecklist(cl)).join('');
+  renderDetailChecklists(checklists || [], taskId);
 }
 
 function renderChecklist(cl) {
@@ -2930,7 +3187,7 @@ function renderComment(c) {
         <div class="comment-meta">
           <div class="comment-author">${escHtml(c.user_name)}</div>
           <div class="comment-time">${time}</div>
-          ${isOwn ? `<div class="comment-delete" onclick="deleteComment('${c.id}')">Delete</div>` : ''}
+          ${isOwn ? `<div class="comment-delete" onclick="deleteComment('${c.id}','${c.task_id}')">Delete</div>` : ''}
         </div>
         <div class="comment-text">${escHtml(c.content)}</div>
       </div>
@@ -2943,29 +3200,24 @@ async function postComment(taskId) {
   if (!content) return;
 
   const userName = currentUser?.user_metadata?.full_name || currentUser?.email?.split('@')[0] || 'User';
-  const { data: comment, error } = await sb.from('comments').insert({
+  const { error } = await sb.from('comments').insert({
     task_id: taskId, content, user_id: currentUser.id, user_name: userName
-  }).select().single();
+  });
 
   if (error) { toast('Failed to post comment'); return; }
 
+  await logActivity(taskId, 'added a comment', null);
   textarea.value = '';
   textarea.style.height = 'auto';
-  const list = document.querySelector('#comments-container .comment-list');
-  const emptyMsg = document.querySelector('#comments-container div');
-  if (list) {
-    list.insertAdjacentHTML('beforeend', renderComment(comment));
-  } else {
-    document.getElementById('comments-container').innerHTML = `<div class="comment-list">${renderComment(comment)}</div>`;
-  }
   delete boardCache[currentBoardId];
+  await loadActivityFeed(taskId);
 }
 
-async function deleteComment(commentId) {
+async function deleteComment(commentId, taskId) {
   if (!confirm('Delete this comment?')) return;
   await sb.from('comments').delete().eq('id', commentId);
-  document.getElementById(`cmt-${commentId}`)?.remove();
   delete boardCache[currentBoardId];
+  if (taskId) await loadActivityFeed(taskId);
 }
 
 // ─── CUSTOM FIELDS ───
@@ -3090,15 +3342,7 @@ async function deleteCustomField(fieldId, boardId, taskId) {
 // ─── ATTACHMENTS ───
 async function loadAttachments(taskId) {
   const { data: attachments } = await sb.from('attachments').select('*').eq('task_id', taskId).order('created_at');
-  const el = document.getElementById('attachments-container');
-  if (!el) return;
-
-  if (!attachments?.length) {
-    el.innerHTML = `<div style="color:var(--text-3);font-size:13px;margin-bottom:8px">No attachments yet.</div>`;
-    return;
-  }
-
-  el.innerHTML = `<div class="attachment-list">${attachments.map(a => renderAttachment(a)).join('')}</div>`;
+  renderDetailAttachments(attachments || [], taskId);
 }
 
 function renderAttachment(a) {
@@ -3180,6 +3424,52 @@ async function deleteAttachment(attachId, path) {
   document.getElementById(`att-${attachId}`)?.remove();
   delete boardCache[currentBoardId];
   toast('Attachment deleted');
+}
+
+// ─── ACTIVITY LOG ───
+async function logActivity(taskId, action, detail) {
+  if (!currentUser) return;
+  const userName = currentUser?.user_metadata?.full_name || currentUser?.email?.split('@')[0] || 'User';
+  try {
+    await sb.from('activity_log').insert({
+      task_id: taskId,
+      user_id: currentUser.id,
+      user_name: userName,
+      action,
+      detail: detail || null
+    });
+  } catch(e) { /* non-blocking — don't break UI if logging fails */ }
+}
+
+async function loadActivityLog(taskId) {
+  const el = document.getElementById('activity-container');
+  if (!el) return;
+
+  const { data, error } = await sb.from('activity_log')
+    .select('*')
+    .eq('task_id', taskId)
+    .order('created_at', { ascending: false });
+
+  if (error || !data?.length) {
+    el.innerHTML = `<div style="color:var(--text-3);font-size:13px">No activity recorded yet.</div>`;
+    return;
+  }
+
+  el.innerHTML = `<div class="activity-list">${data.map(renderActivityItem).join('')}</div>`;
+}
+
+function renderActivityItem(a) {
+  const initials = (a.user_name || 'U').slice(0, 2).toUpperCase();
+  const time = new Date(a.created_at).toLocaleString('en', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+  const detailHtml = a.detail ? ` <span class="activity-detail">${escHtml(a.detail)}</span>` : '';
+  return `
+    <div class="activity-item">
+      <div class="activity-avatar">${initials}</div>
+      <div class="activity-body">
+        <div class="activity-text"><strong>${escHtml(a.user_name)}</strong> ${escHtml(a.action)}${detailHtml}</div>
+        <div class="activity-time">${time}</div>
+      </div>
+    </div>`;
 }
 
 // ─── AUTH ───
