@@ -1072,7 +1072,7 @@
     <div class="topbar">
       <div class="topbar-title" id="topbar-title">Home</div>
       <div class="topbar-actions">
-        <div id="board-actions" class="hidden" style="display:flex;gap:8px;">
+        <div id="board-actions" style="display:none;gap:8px;">
           <button class="btn btn-ghost btn-sm" onclick="showNewTaskModal()">
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 2V12M2 7H12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
             Add Task
@@ -1118,7 +1118,7 @@ let projects = [];
 let boards = [];
 let currentBoardId = null;
 let dragTask = null;
-let dragColumn = null;
+let boardCache = {}; // in-memory task cache keyed by boardId
 
 // ─── LABEL CONFIG ───
 const LABEL_OPTIONS = [
@@ -1136,14 +1136,9 @@ const PROJECT_COLORS = [
 
 // ─── INIT ───
 async function init() {
-  const { data: { session } } = await sb.auth.getSession();
-  if (session) {
-    currentUser = session.user;
-    await loadApp();
-  }
-
+  // Set up auth listener first to avoid double-firing loadApp
   sb.auth.onAuthStateChange(async (event, session) => {
-    if (event === 'SIGNED_IN' && session) {
+    if (event === 'SIGNED_IN' && session && !currentUser) {
       currentUser = session.user;
       await loadApp();
     } else if (event === 'SIGNED_OUT') {
@@ -1151,6 +1146,13 @@ async function init() {
       showAuthScreen();
     }
   });
+
+  // Check existing session (page reload / already logged in)
+  const { data: { session } } = await sb.auth.getSession();
+  if (session && !currentUser) {
+    currentUser = session.user;
+    await loadApp();
+  }
 }
 
 async function loadApp() {
@@ -1191,19 +1193,43 @@ function setTimeGreeting() {
 
 // ─── WORKSPACE ───
 async function ensureWorkspace() {
-  const { data } = await sb.from('workspaces')
+  // First check if user owns a workspace
+  const { data: ownedWs } = await sb.from('workspaces')
     .select('*')
     .eq('owner_id', currentUser.id)
     .limit(1)
-    .single();
+    .maybeSingle();
 
-  if (data) {
-    currentWorkspace = data;
-  } else {
-    const name = (currentUser.user_metadata?.full_name || 'My') + "'s Space";
-    const { data: ws } = await sb.from('workspaces').insert({ name, owner_id: currentUser.id }).select().single();
-    currentWorkspace = ws;
+  if (ownedWs) {
+    currentWorkspace = ownedWs;
+    return;
   }
+
+  // Check if invited as member to someone else's workspace
+  const { data: membership } = await sb.from('workspace_members')
+    .select('workspace_id')
+    .eq('email', currentUser.email)
+    .limit(1)
+    .maybeSingle();
+
+  if (membership) {
+    const { data: sharedWs } = await sb.from('workspaces')
+      .select('*')
+      .eq('id', membership.workspace_id)
+      .maybeSingle();
+    if (sharedWs) {
+      currentWorkspace = sharedWs;
+      return;
+    }
+  }
+
+  // No workspace found — create one
+  const name = (currentUser.user_metadata?.full_name || 'My') + "'s Space";
+  const { data: ws } = await sb.from('workspaces')
+    .insert({ name, owner_id: currentUser.id })
+    .select()
+    .single();
+  currentWorkspace = ws;
 }
 
 // ─── PROJECTS ───
@@ -1253,7 +1279,7 @@ function showHome() {
   currentBoardId = null;
   document.getElementById('home-view').classList.remove('hidden');
   document.getElementById('board-view-container').classList.add('hidden');
-  document.getElementById('board-actions').classList.add('hidden');
+  document.getElementById('board-actions').style.display = 'none';
   document.getElementById('topbar-title').textContent = 'Home';
   document.getElementById('nav-home').classList.add('active');
   renderHomeView();
@@ -1290,7 +1316,7 @@ async function openBoard(boardId) {
   currentBoardId = boardId;
   document.getElementById('home-view').classList.add('hidden');
   document.getElementById('board-view-container').classList.remove('hidden');
-  document.getElementById('board-actions').classList.remove('hidden');
+  document.getElementById('board-actions').style.display = 'flex';
   document.getElementById('nav-home').classList.remove('active');
 
   // find board name
@@ -1313,32 +1339,49 @@ async function renderBoard(boardId) {
   const container = document.getElementById('board-view-container');
   container.innerHTML = '<div class="loading-dots"><span></span><span></span><span></span></div>';
 
-  // Timeout wrapper — if Supabase hangs for >8s, show an error with retry
-  let columns, boardError;
+  // Step 1: fetch columns first (fast — small payload)
+  let columns;
   try {
-    const timeout = new Promise((_, reject) =>
-      setTimeout(() => reject(new Error('Request timed out — tap to retry')), 8000)
-    );
-    const query = sb.from('columns')
-      .select('id, name, color, position, tasks(id, title, description, due_date, assignee_name, labels, position, column_id, created_by)')
+    const colResult = await sb.from('columns')
+      .select('id, name, color, position')
       .eq('board_id', boardId)
-      .order('position')
-      .order('position', { referencedTable: 'tasks' });
-    const result = await Promise.race([query, timeout]);
-    columns = result.data;
-    boardError = result.error;
+      .order('position');
+
+    if (colResult.error) throw new Error(colResult.error.message);
+    const colData = colResult.data || [];
+
+    // Step 2: fetch tasks using column IDs we already have — true 2-query parallel not possible
+    // without nested select, so we do 2 sequential but lightweight queries
+    const colIds = colData.map(c => c.id);
+    let taskData = [];
+    if (colIds.length > 0) {
+      const taskResult = await sb.from('tasks')
+        .select('id, title, description, due_date, assignee_name, labels, position, column_id, created_by')
+        .in('column_id', colIds)
+        .order('position');
+      if (taskResult.error) throw new Error(taskResult.error.message);
+      taskData = taskResult.data || [];
+    }
+
+    // Group tasks by column and cache them
+    const tasksByCol = {};
+    for (const t of taskData) {
+      if (!tasksByCol[t.column_id]) tasksByCol[t.column_id] = [];
+      tasksByCol[t.column_id].push(t);
+    }
+    columns = colData.map(col => ({ ...col, tasks: tasksByCol[col.id] || [] }));
+
+    // Cache for openTask() to use without re-fetching
+    boardCache[boardId] = {};
+    for (const t of taskData) boardCache[boardId][t.id] = t;
+
   } catch (e) {
     container.innerHTML = `<div class="empty-state">
-      <div class="empty-state-icon" style="font-size:32px">⏱️</div>
-      <h3>Board took too long to load</h3>
-      <p style="margin-bottom:16px">This can happen after switching tabs. Tap below to retry.</p>
+      <div class="empty-state-icon" style="font-size:32px">⚠️</div>
+      <h3>Failed to load board</h3>
+      <p style="margin-bottom:16px">${e.message}</p>
       <button class="btn btn-primary" style="width:auto;padding:10px 20px" onclick="renderBoard('${boardId}')">Retry</button>
     </div>`;
-    return;
-  }
-
-  if (boardError) {
-    container.innerHTML = `<div class="empty-state"><div class="empty-state-icon" style="font-size:32px">⚠️</div><h3>Failed to load board</h3><p>${boardError.message}</p><button class="btn btn-primary" style="width:auto;padding:10px 20px;margin-top:16px" onclick="renderBoard('${boardId}')">Retry</button></div>`;
     return;
   }
 
@@ -1420,7 +1463,12 @@ function formatDue(dateStr) {
 
 // ─── TASK DETAIL ───
 async function openTask(taskId) {
-  const { data: task } = await sb.from('tasks').select('*').eq('id', taskId).single();
+  // Use cached data if available, fall back to fetch
+  let task = boardCache[currentBoardId]?.[taskId];
+  if (!task) {
+    const { data } = await sb.from('tasks').select('*').eq('id', taskId).single();
+    task = data;
+  }
   if (!task) return;
 
   const labels = task.labels || [];
@@ -1484,6 +1532,7 @@ async function saveTask(taskId) {
   if (!title) { toast('Title cannot be empty'); return; }
 
   await sb.from('tasks').update({ title, description: desc, due_date: dueDate, assignee_name: assignee, labels }).eq('id', taskId);
+  delete boardCache[currentBoardId]; // invalidate cache
   closeModal();
   await renderBoard(currentBoardId);
   toast('Task saved');
@@ -1492,6 +1541,7 @@ async function saveTask(taskId) {
 async function deleteTask(taskId) {
   if (!confirm('Delete this task?')) return;
   await sb.from('tasks').delete().eq('id', taskId);
+  delete boardCache[currentBoardId]; // invalidate cache
   closeModal();
   await renderBoard(currentBoardId);
   toast('Task deleted');
@@ -1529,6 +1579,7 @@ async function onDrop(e, columnId) {
   const maxPos = tasks && tasks.length ? Math.max(...tasks.map(t => t.position || 0)) + 1 : 0;
 
   await sb.from('tasks').update({ column_id: columnId, position: maxPos }).eq('id', dragTask);
+  delete boardCache[currentBoardId]; // invalidate cache
   await renderBoard(currentBoardId);
 }
 
@@ -1742,6 +1793,7 @@ async function createTask() {
   const pos = tasks && tasks.length ? (tasks[0].position || 0) + 1 : 0;
 
   await sb.from('tasks').insert({ title, column_id: colId, due_date: due, assignee_name: assignee, labels, position: pos, created_by: currentUser.id });
+  delete boardCache[currentBoardId]; // invalidate cache
   closeModal();
   await renderBoard(currentBoardId);
   toast('Task created!');
