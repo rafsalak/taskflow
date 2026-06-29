@@ -913,6 +913,55 @@
 
   .hidden { display: none !important; }
 
+  /* ─── CONTEXT MENU ─── */
+  .ctx-menu {
+    position: fixed;
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-lg);
+    z-index: 2000;
+    min-width: 160px;
+    padding: 4px;
+    animation: scaleIn 0.1s ease;
+  }
+
+  .ctx-item {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 8px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 13px;
+    color: var(--text);
+    transition: background 0.1s;
+  }
+
+  .ctx-item:hover { background: var(--surface-2); }
+  .ctx-item.danger { color: var(--danger); }
+  .ctx-item.danger:hover { background: #FEF2F2; }
+  .ctx-item svg { width: 14px; height: 14px; flex-shrink: 0; color: var(--text-3); }
+  .ctx-item.danger svg { color: var(--danger); }
+  .ctx-divider { height: 1px; background: var(--border); margin: 4px 0; }
+
+  /* ─── THREE-DOT BUTTON ─── */
+  .dots-btn {
+    width: 20px; height: 20px;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 4px;
+    cursor: pointer;
+    color: var(--text-3);
+    opacity: 0;
+    transition: opacity 0.12s, background 0.12s;
+    flex-shrink: 0;
+  }
+
+  .project-item:hover .dots-btn,
+  .board-item:hover .dots-btn,
+  .column-header:hover .dots-btn { opacity: 1; }
+  .dots-btn:hover { background: var(--surface-2); color: var(--text-2); opacity: 1; }
+
   /* Welcome / home view */
   .home-view {
     flex: 1;
@@ -1254,12 +1303,18 @@ function renderSidebarProjects() {
     <div class="project-item" onclick="toggleProject('${p.id}')" id="proj-item-${p.id}">
       <div class="project-dot" style="background:${p.color || '#6366F1'}"></div>
       <span class="project-name">${escHtml(p.name)}</span>
+      <div class="dots-btn" onclick="event.stopPropagation();showProjectMenu(event,'${p.id}')" title="Options">
+        <svg viewBox="0 0 14 14" fill="none"><circle cx="7" cy="2.5" r="1" fill="currentColor"/><circle cx="7" cy="7" r="1" fill="currentColor"/><circle cx="7" cy="11.5" r="1" fill="currentColor"/></svg>
+      </div>
     </div>
     <div id="proj-boards-${p.id}" class="hidden">
       ${(p.boards || []).map(b => `
         <div class="board-item" onclick="openBoard('${b.id}')" id="board-item-${b.id}">
           <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><rect x="0.5" y="0.5" width="4" height="11" rx="1" stroke="currentColor" stroke-width="1.2"/><rect x="7.5" y="0.5" width="4" height="7" rx="1" stroke="currentColor" stroke-width="1.2"/></svg>
-          ${escHtml(b.name)}
+          <span style="flex:1">${escHtml(b.name)}</span>
+          <div class="dots-btn" onclick="event.stopPropagation();showBoardMenu(event,'${b.id}','${p.id}')" title="Options">
+            <svg viewBox="0 0 14 14" fill="none"><circle cx="7" cy="2.5" r="1" fill="currentColor"/><circle cx="7" cy="7" r="1" fill="currentColor"/><circle cx="7" cy="11.5" r="1" fill="currentColor"/></svg>
+          </div>
         </div>
       `).join('')}
       <div class="board-item" style="color:var(--text-3);font-style:italic" onclick="showNewBoardModal('${p.id}')">
@@ -1413,6 +1468,9 @@ function renderColumn(col) {
         <div class="column-indicator" style="background:${colColor}"></div>
         <div class="column-title">${escHtml(col.name)}</div>
         <div class="column-count">${tasks.length}</div>
+        <div class="dots-btn" onclick="showColumnMenu(event,'${col.id}')" title="Column options">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="2.5" r="1" fill="currentColor"/><circle cx="7" cy="7" r="1" fill="currentColor"/><circle cx="7" cy="11.5" r="1" fill="currentColor"/></svg>
+        </div>
         <div class="column-add-btn" onclick="showNewTaskModal('${col.id}')" title="Add task">
           <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 2V12M2 7H12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
         </div>
@@ -1797,6 +1855,231 @@ async function createTask() {
   closeModal();
   await renderBoard(currentBoardId);
   toast('Task created!');
+}
+
+// ─── CONTEXT MENUS ───
+function showCtxMenu(x, y, items) {
+  closeCtxMenu();
+  const menu = document.createElement('div');
+  menu.className = 'ctx-menu';
+  menu.id = 'ctx-menu';
+  menu.innerHTML = items.map(item =>
+    item === 'divider'
+      ? '<div class="ctx-divider"></div>'
+      : `<div class="ctx-item ${item.danger ? 'danger' : ''}" onclick="closeCtxMenu();(${item.fn})()">
+          ${item.icon}
+          ${item.label}
+        </div>`
+  ).join('');
+
+  // Position smartly — flip if near edge
+  document.body.appendChild(menu);
+  const mw = menu.offsetWidth, mh = menu.offsetHeight;
+  const finalX = (x + mw > window.innerWidth) ? x - mw : x;
+  const finalY = (y + mh > window.innerHeight) ? y - mh : y;
+  menu.style.left = finalX + 'px';
+  menu.style.top = finalY + 'px';
+
+  setTimeout(() => document.addEventListener('click', closeCtxMenu, { once: true }), 0);
+}
+
+function closeCtxMenu() {
+  document.getElementById('ctx-menu')?.remove();
+}
+
+function showProjectMenu(event, projectId) {
+  const project = projects.find(p => p.id === projectId);
+  if (!project) return;
+  showCtxMenu(event.clientX, event.clientY, [
+    {
+      label: 'Rename project',
+      icon: '<svg viewBox="0 0 14 14" fill="none"><path d="M2 10.5L9.5 3l1.5 1.5-7.5 7.5H2v-1.5z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/></svg>',
+      fn: `function(){ showRenameProjectModal('${projectId}') }`
+    },
+    {
+      label: 'Add board',
+      icon: '<svg viewBox="0 0 14 14" fill="none"><path d="M7 2V12M2 7H12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>',
+      fn: `function(){ showNewBoardModal('${projectId}') }`
+    },
+    'divider',
+    {
+      label: 'Delete project',
+      icon: '<svg viewBox="0 0 14 14" fill="none"><path d="M2 4h10M5 4V2.5h4V4M5.5 6.5v4M8.5 6.5v4M3 4l.5 8h7l.5-8" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+      danger: true,
+      fn: `function(){ deleteProject('${projectId}') }`
+    }
+  ]);
+}
+
+function showBoardMenu(event, boardId, projectId) {
+  showCtxMenu(event.clientX, event.clientY, [
+    {
+      label: 'Rename board',
+      icon: '<svg viewBox="0 0 14 14" fill="none"><path d="M2 10.5L9.5 3l1.5 1.5-7.5 7.5H2v-1.5z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/></svg>',
+      fn: `function(){ showRenameBoardModal('${boardId}') }`
+    },
+    'divider',
+    {
+      label: 'Delete board',
+      icon: '<svg viewBox="0 0 14 14" fill="none"><path d="M2 4h10M5 4V2.5h4V4M5.5 6.5v4M8.5 6.5v4M3 4l.5 8h7l.5-8" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+      danger: true,
+      fn: `function(){ deleteBoard('${boardId}','${projectId}') }`
+    }
+  ]);
+}
+
+function showColumnMenu(event, columnId) {
+  showCtxMenu(event.clientX, event.clientY, [
+    {
+      label: 'Rename column',
+      icon: '<svg viewBox="0 0 14 14" fill="none"><path d="M2 10.5L9.5 3l1.5 1.5-7.5 7.5H2v-1.5z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/></svg>',
+      fn: `function(){ showRenameColumnModal('${columnId}') }`
+    },
+    'divider',
+    {
+      label: 'Delete column',
+      icon: '<svg viewBox="0 0 14 14" fill="none"><path d="M2 4h10M5 4V2.5h4V4M5.5 6.5v4M8.5 6.5v4M3 4l.5 8h7l.5-8" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+      danger: true,
+      fn: `function(){ deleteColumn('${columnId}') }`
+    }
+  ]);
+}
+
+// ─── RENAME / DELETE PROJECTS ───
+function showRenameProjectModal(projectId) {
+  const project = projects.find(p => p.id === projectId);
+  if (!project) return;
+  createModal('rename-proj', `
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title">Rename Project</div>
+        <div class="modal-close" onclick="closeModal()"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 4L12 12M12 4L4 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></div>
+      </div>
+      <div class="modal-body">
+        <div class="modal-field">
+          <label>Project name</label>
+          <input type="text" id="rename-proj-input" value="${escHtml(project.name)}" autofocus>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost btn-sm" onclick="closeModal()">Cancel</button>
+        <button class="btn btn-primary btn-sm" style="width:auto;margin-top:0" onclick="renameProject('${projectId}')">Save</button>
+      </div>
+    </div>
+  `);
+  setTimeout(() => { const el = document.getElementById('rename-proj-input'); el?.select(); }, 50);
+}
+
+async function renameProject(projectId) {
+  const name = document.getElementById('rename-proj-input').value.trim();
+  if (!name) { toast('Enter a name'); return; }
+  await sb.from('projects').update({ name }).eq('id', projectId);
+  closeModal();
+  await loadProjects();
+  renderHomeView();
+  toast('Project renamed');
+}
+
+async function deleteProject(projectId) {
+  if (!confirm('Delete this project and all its boards and tasks? This cannot be undone.')) return;
+  await sb.from('projects').delete().eq('id', projectId);
+  if (currentBoardId) {
+    const proj = projects.find(p => p.id === projectId);
+    if (proj?.boards?.some(b => b.id === currentBoardId)) showHome();
+  }
+  await loadProjects();
+  renderHomeView();
+  toast('Project deleted');
+}
+
+// ─── RENAME / DELETE BOARDS ───
+function showRenameBoardModal(boardId) {
+  let boardName = '';
+  for (const p of projects) {
+    const b = (p.boards || []).find(b => b.id === boardId);
+    if (b) { boardName = b.name; break; }
+  }
+  createModal('rename-board', `
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title">Rename Board</div>
+        <div class="modal-close" onclick="closeModal()"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 4L12 12M12 4L4 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></div>
+      </div>
+      <div class="modal-body">
+        <div class="modal-field">
+          <label>Board name</label>
+          <input type="text" id="rename-board-input" value="${escHtml(boardName)}" autofocus>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost btn-sm" onclick="closeModal()">Cancel</button>
+        <button class="btn btn-primary btn-sm" style="width:auto;margin-top:0" onclick="renameBoard('${boardId}')">Save</button>
+      </div>
+    </div>
+  `);
+  setTimeout(() => { const el = document.getElementById('rename-board-input'); el?.select(); }, 50);
+}
+
+async function renameBoard(boardId) {
+  const name = document.getElementById('rename-board-input').value.trim();
+  if (!name) { toast('Enter a name'); return; }
+  await sb.from('boards').update({ name }).eq('id', boardId);
+  closeModal();
+  await loadProjects();
+  if (currentBoardId === boardId) {
+    document.getElementById('topbar-title').textContent = name;
+  }
+  toast('Board renamed');
+}
+
+async function deleteBoard(boardId, projectId) {
+  if (!confirm('Delete this board and all its tasks? This cannot be undone.')) return;
+  await sb.from('boards').delete().eq('id', boardId);
+  if (currentBoardId === boardId) showHome();
+  await loadProjects();
+  toast('Board deleted');
+}
+
+// ─── RENAME / DELETE COLUMNS ───
+function showRenameColumnModal(columnId) {
+  // Find column name from current board DOM
+  const colEl = document.querySelector(`.column[data-column-id="${columnId}"] .column-title`);
+  const colName = colEl ? colEl.textContent : '';
+  createModal('rename-col', `
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title">Rename Column</div>
+        <div class="modal-close" onclick="closeModal()"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 4L12 12M12 4L4 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg></div>
+      </div>
+      <div class="modal-body">
+        <div class="modal-field">
+          <label>Column name</label>
+          <input type="text" id="rename-col-input" value="${escHtml(colName)}" autofocus>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost btn-sm" onclick="closeModal()">Cancel</button>
+        <button class="btn btn-primary btn-sm" style="width:auto;margin-top:0" onclick="renameColumn('${columnId}')">Save</button>
+      </div>
+    </div>
+  `);
+  setTimeout(() => { const el = document.getElementById('rename-col-input'); el?.select(); }, 50);
+}
+
+async function renameColumn(columnId) {
+  const name = document.getElementById('rename-col-input').value.trim();
+  if (!name) { toast('Enter a name'); return; }
+  await sb.from('columns').update({ name }).eq('id', columnId);
+  closeModal();
+  await renderBoard(currentBoardId);
+  toast('Column renamed');
+}
+
+async function deleteColumn(columnId) {
+  if (!confirm('Delete this column and all its tasks? This cannot be undone.')) return;
+  await sb.from('columns').delete().eq('id', columnId);
+  await renderBoard(currentBoardId);
+  toast('Column deleted');
 }
 
 // ─── INVITE MODAL ───
