@@ -1283,8 +1283,9 @@ async function ensureWorkspace() {
 
 // ─── PROJECTS ───
 async function loadProjects() {
+  // Only fetch id/name/color for projects + id/name for boards — sidebar doesn't need tasks
   const { data } = await sb.from('projects')
-    .select('*, boards(*)')
+    .select('id, name, color, created_at, boards(id, name)')
     .eq('workspace_id', currentWorkspace.id)
     .order('created_at');
 
@@ -1684,7 +1685,16 @@ async function createProject() {
   const color = document.getElementById('new-proj-color').value;
   if (!name) { toast('Enter a project name'); return; }
 
-  const { data } = await sb.from('projects').insert({ name, color, workspace_id: currentWorkspace.id, owner_id: currentUser.id }).select().single();
+  const { data, error } = await sb.from('projects')
+    .insert({ name, color, workspace_id: currentWorkspace.id, owner_id: currentUser.id })
+    .select()
+    .single();
+
+  if (error || !data) {
+    toast('Failed to create project: ' + (error?.message || 'unknown error'));
+    return;
+  }
+
   closeModal();
   await loadProjects();
   renderHomeView();
@@ -1718,7 +1728,15 @@ async function createBoard(projectId) {
   const name = document.getElementById('new-board-name').value.trim();
   if (!name) { toast('Enter a board name'); return; }
 
-  const { data: board } = await sb.from('boards').insert({ name, project_id: projectId }).select().single();
+  const { data: board, error: boardErr } = await sb.from('boards')
+    .insert({ name, project_id: projectId })
+    .select()
+    .single();
+
+  if (boardErr || !board) {
+    toast('Failed to create board: ' + (boardErr?.message || 'unknown error'));
+    return;
+  }
 
   // create default columns
   const defaults = [
