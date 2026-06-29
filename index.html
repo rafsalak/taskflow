@@ -1045,8 +1045,38 @@
         <input type="password" id="login-password" placeholder="••••••••" autocomplete="current-password">
       </div>
       <button class="btn btn-primary" onclick="handleLogin()">Sign in</button>
+      <div style="text-align:center;margin-top:12px">
+        <a onclick="showForgotPassword()" style="font-size:13px;color:var(--text-3);cursor:pointer;text-decoration:none;" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--text-3)'">Forgot password?</a>
+      </div>
       <div class="auth-toggle">Don't have an account? <a onclick="toggleAuth()">Sign up</a></div>
     </div>
+    <!-- Forgot Password -->
+    <div id="forgot-form" style="display:none">
+      <div class="auth-title">Reset password</div>
+      <div class="auth-sub">Enter your email and we'll send you a reset link</div>
+      <div class="field-group">
+        <label>Email</label>
+        <input type="email" id="forgot-email" placeholder="you@example.com">
+      </div>
+      <button class="btn btn-primary" onclick="handleForgotPassword()">Send reset link</button>
+      <div class="auth-toggle"><a onclick="showLoginForm()">← Back to sign in</a></div>
+    </div>
+
+    <!-- Reset Password (after clicking email link) -->
+    <div id="reset-form" style="display:none">
+      <div class="auth-title">Set new password</div>
+      <div class="auth-sub">Choose a new password for your account</div>
+      <div class="field-group">
+        <label>New password</label>
+        <input type="password" id="reset-password" placeholder="Min 6 characters">
+      </div>
+      <div class="field-group">
+        <label>Confirm password</label>
+        <input type="password" id="reset-password-confirm" placeholder="Repeat password">
+      </div>
+      <button class="btn btn-primary" onclick="handleResetPassword()">Update password</button>
+    </div>
+
     <!-- Register -->
     <div id="register-form" style="display:none">
       <div class="auth-title">Create account</div>
@@ -1187,7 +1217,16 @@ const PROJECT_COLORS = [
 async function init() {
   // Set up auth listener first to avoid double-firing loadApp
   sb.auth.onAuthStateChange(async (event, session) => {
-    if (event === 'SIGNED_IN' && session && !currentUser) {
+    if (event === 'PASSWORD_RECOVERY') {
+      // User clicked the reset link in their email — show the set-new-password form
+      document.getElementById('auth-screen').classList.remove('hidden');
+      document.getElementById('app').classList.add('hidden');
+      document.getElementById('login-form').style.display = 'none';
+      document.getElementById('forgot-form').style.display = 'none';
+      document.getElementById('register-form').style.display = 'none';
+      document.getElementById('reset-form').style.display = 'block';
+      clearAuthError();
+    } else if (event === 'SIGNED_IN' && session && !currentUser) {
       currentUser = session.user;
       await loadApp();
     } else if (event === 'SIGNED_OUT') {
@@ -2160,6 +2199,53 @@ async function sendInvite() {
 }
 
 // ─── AUTH ───
+function showForgotPassword() {
+  document.getElementById('login-form').style.display = 'none';
+  document.getElementById('register-form').style.display = 'none';
+  document.getElementById('forgot-form').style.display = 'block';
+  document.getElementById('reset-form').style.display = 'none';
+  clearAuthError();
+}
+
+function showLoginForm() {
+  document.getElementById('login-form').style.display = 'block';
+  document.getElementById('register-form').style.display = 'none';
+  document.getElementById('forgot-form').style.display = 'none';
+  document.getElementById('reset-form').style.display = 'none';
+  clearAuthError();
+}
+
+async function handleForgotPassword() {
+  const email = document.getElementById('forgot-email').value.trim();
+  if (!email) { showAuthError('Enter your email address'); return; }
+
+  const { error } = await sb.auth.resetPasswordForEmail(email, {
+    redirectTo: window.location.href
+  });
+
+  if (error) {
+    showAuthError(error.message);
+  } else {
+    showAuthError('Reset link sent! Check your inbox (and spam folder).', true);
+  }
+}
+
+async function handleResetPassword() {
+  const password = document.getElementById('reset-password').value;
+  const confirm = document.getElementById('reset-password-confirm').value;
+
+  if (!password || password.length < 6) { showAuthError('Password must be at least 6 characters'); return; }
+  if (password !== confirm) { showAuthError('Passwords do not match'); return; }
+
+  const { error } = await sb.auth.updateUser({ password });
+  if (error) {
+    showAuthError(error.message);
+  } else {
+    showAuthError('Password updated! Signing you in…', true);
+    setTimeout(() => showLoginForm(), 1500);
+  }
+}
+
 function toggleAuth() {
   const lf = document.getElementById('login-form');
   const rf = document.getElementById('register-form');
