@@ -906,6 +906,432 @@
     flex-shrink: 0;
   }
 
+
+  /* ─── FILTER BAR ─── */
+  .filter-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 24px 12px;
+    flex-wrap: wrap;
+    flex-shrink: 0;
+  }
+
+  .filter-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 12px;
+    border-radius: 100px;
+    border: 1.5px solid var(--border);
+    background: var(--surface);
+    font-size: 12.5px;
+    font-weight: 500;
+    color: var(--text-2);
+    cursor: pointer;
+    transition: all 0.12s;
+  }
+
+  .filter-chip:hover { border-color: var(--border-strong); color: var(--text); background: var(--surface-2); }
+  .filter-chip.active { border-color: var(--accent); color: var(--accent); background: var(--accent-light); }
+  .filter-chip svg { width: 12px; height: 12px; }
+
+  .filter-select {
+    padding: 5px 10px;
+    border: 1.5px solid var(--border);
+    border-radius: 100px;
+    font-family: var(--font);
+    font-size: 12.5px;
+    color: var(--text-2);
+    background: var(--surface);
+    cursor: pointer;
+    outline: none;
+    transition: border-color 0.12s;
+  }
+
+  .filter-select:focus { border-color: var(--accent); }
+
+  .filter-clear {
+    font-size: 12px;
+    color: var(--text-3);
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 6px;
+    transition: all 0.12s;
+  }
+
+  .filter-clear:hover { color: var(--danger); background: #FEF2F2; }
+
+  /* ─── TASK CARD INDICATORS ─── */
+  .task-card-indicators {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 6px;
+  }
+
+  .card-indicator {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    font-size: 11px;
+    color: var(--text-3);
+  }
+
+  .card-indicator svg { width: 11px; height: 11px; }
+  .card-indicator.done { color: var(--accent-3); }
+
+  /* ─── TASK DETAIL TABS ─── */
+  .detail-tabs {
+    display: flex;
+    gap: 0;
+    border-bottom: 1.5px solid var(--border);
+    padding: 0 24px;
+    margin-bottom: 0;
+  }
+
+  .detail-tab {
+    padding: 10px 16px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-3);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1.5px;
+    transition: color 0.12s;
+  }
+
+  .detail-tab:hover { color: var(--text-2); }
+  .detail-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+  .detail-tab-content { display: none; padding: 20px 24px; }
+  .detail-tab-content.active { display: block; }
+
+  /* ─── CHECKLISTS ─── */
+  .checklist-block { margin-bottom: 20px; }
+
+  .checklist-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+
+  .checklist-name {
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--text);
+    flex: 1;
+  }
+
+  .checklist-progress {
+    font-size: 11.5px;
+    color: var(--text-3);
+  }
+
+  .checklist-delete-btn {
+    font-size: 11.5px;
+    color: var(--text-3);
+    cursor: pointer;
+    padding: 3px 8px;
+    border-radius: 4px;
+    transition: all 0.12s;
+  }
+
+  .checklist-delete-btn:hover { color: var(--danger); background: #FEF2F2; }
+
+  .progress-bar-wrap {
+    height: 4px;
+    background: var(--surface-2);
+    border-radius: 2px;
+    margin-bottom: 10px;
+    overflow: hidden;
+  }
+
+  .progress-bar-fill {
+    height: 100%;
+    background: var(--accent-3);
+    border-radius: 2px;
+    transition: width 0.3s ease;
+  }
+
+  .checklist-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 5px 0;
+    group: true;
+  }
+
+  .checklist-item input[type=checkbox] {
+    width: 15px; height: 15px;
+    margin-top: 2px;
+    cursor: pointer;
+    accent-color: var(--accent);
+    flex-shrink: 0;
+  }
+
+  .checklist-item-text {
+    flex: 1;
+    font-size: 13.5px;
+    color: var(--text);
+    line-height: 1.4;
+    cursor: pointer;
+    border-radius: 4px;
+    padding: 1px 4px;
+    transition: background 0.1s;
+  }
+
+  .checklist-item-text:hover { background: var(--surface-2); }
+  .checklist-item-text.done { text-decoration: line-through; color: var(--text-3); }
+
+  .checklist-item-due {
+    font-size: 11px;
+    color: var(--text-3);
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    white-space: nowrap;
+  }
+
+  .checklist-item-due.overdue { color: var(--danger); }
+
+  .checklist-item-del {
+    width: 18px; height: 18px;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--text-3);
+    cursor: pointer;
+    border-radius: 3px;
+    opacity: 0;
+    transition: all 0.12s;
+    flex-shrink: 0;
+  }
+
+  .checklist-item:hover .checklist-item-del { opacity: 1; }
+  .checklist-item-del:hover { background: #FEF2F2; color: var(--danger); }
+
+  .add-checklist-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 0 0 25px;
+  }
+
+  .add-checklist-item input {
+    flex: 1;
+    padding: 6px 10px;
+    border: 1.5px solid var(--border);
+    border-radius: 6px;
+    font-family: var(--font);
+    font-size: 13px;
+    color: var(--text);
+    background: var(--bg);
+    outline: none;
+    transition: border-color 0.15s;
+  }
+
+  .add-checklist-item input:focus { border-color: var(--accent); }
+
+  /* ─── COMMENTS ─── */
+  .comment-list { display: flex; flex-direction: column; gap: 14px; }
+
+  .comment-row {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+  }
+
+  .comment-avatar {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #A78BFA, #6366F1);
+    display: flex; align-items: center; justify-content: center;
+    color: white;
+    font-size: 11px;
+    font-weight: 600;
+    flex-shrink: 0;
+  }
+
+  .comment-bubble {
+    flex: 1;
+    background: var(--bg);
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    padding: 10px 14px;
+  }
+
+  .comment-meta {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 5px;
+  }
+
+  .comment-author { font-size: 12.5px; font-weight: 600; color: var(--text); }
+  .comment-time { font-size: 11.5px; color: var(--text-3); }
+  .comment-text { font-size: 13.5px; color: var(--text); line-height: 1.5; }
+
+  .comment-delete {
+    font-size: 11px;
+    color: var(--text-3);
+    cursor: pointer;
+    margin-left: auto;
+    padding: 2px 6px;
+    border-radius: 4px;
+  }
+
+  .comment-delete:hover { color: var(--danger); background: #FEF2F2; }
+
+  .comment-input-row {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    margin-top: 14px;
+  }
+
+  .comment-input-row textarea {
+    flex: 1;
+    padding: 9px 12px;
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    font-family: var(--font);
+    font-size: 13.5px;
+    color: var(--text);
+    background: var(--bg);
+    outline: none;
+    resize: none;
+    min-height: 40px;
+    transition: border-color 0.15s;
+    line-height: 1.5;
+  }
+
+  .comment-input-row textarea:focus { border-color: var(--accent); background: var(--surface); min-height: 72px; }
+
+  /* ─── CUSTOM FIELDS ─── */
+  .custom-field-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 7px 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .custom-field-row:last-child { border-bottom: none; }
+
+  .cf-name {
+    width: 130px;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--text-2);
+    flex-shrink: 0;
+  }
+
+  .cf-value {
+    flex: 1;
+    padding: 5px 8px;
+    border: 1.5px solid var(--border);
+    border-radius: 6px;
+    font-family: var(--font);
+    font-size: 13px;
+    color: var(--text);
+    background: var(--bg);
+    outline: none;
+    transition: border-color 0.15s;
+  }
+
+  .cf-value:focus { border-color: var(--accent); }
+
+  .cf-manage-btn {
+    font-size: 12px;
+    color: var(--text-3);
+    cursor: pointer;
+    padding: 5px 10px;
+    border-radius: 6px;
+    border: 1.5px dashed var(--border);
+    text-align: center;
+    margin-top: 10px;
+    transition: all 0.12s;
+  }
+
+  .cf-manage-btn:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-light); }
+
+  /* ─── ATTACHMENTS ─── */
+  .attachment-list { display: flex; flex-direction: column; gap: 8px; }
+
+  .attachment-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    background: var(--bg);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    transition: border-color 0.12s;
+  }
+
+  .attachment-row:hover { border-color: var(--border-strong); }
+
+  .attachment-icon {
+    width: 32px; height: 32px;
+    background: var(--surface-2);
+    border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px;
+    flex-shrink: 0;
+  }
+
+  .attachment-info { flex: 1; overflow: hidden; }
+  .attachment-name { font-size: 13px; font-weight: 500; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .attachment-meta { font-size: 11.5px; color: var(--text-3); }
+
+  .attachment-download {
+    padding: 5px 10px;
+    border-radius: 6px;
+    border: 1.5px solid var(--border);
+    font-size: 12px;
+    color: var(--text-2);
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.12s;
+  }
+
+  .attachment-download:hover { border-color: var(--accent); color: var(--accent); }
+
+  .attachment-del {
+    width: 24px; height: 24px;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 5px;
+    cursor: pointer;
+    color: var(--text-3);
+    transition: all 0.12s;
+  }
+
+  .attachment-del:hover { background: #FEF2F2; color: var(--danger); }
+
+  .drop-zone {
+    border: 2px dashed var(--border-strong);
+    border-radius: var(--radius);
+    padding: 20px;
+    text-align: center;
+    color: var(--text-3);
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.15s;
+    margin-top: 10px;
+  }
+
+  .drop-zone:hover, .drop-zone.dragover { border-color: var(--accent); color: var(--accent); background: var(--accent-light); }
+  .drop-zone input { display: none; }
+
+  /* ─── TASK CARD UPDATED ─── */
+  .task-card-footer {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 8px;
+    flex-wrap: wrap;
+  }
+
   /* ─── RESPONSIVE ─── */
   @media (max-width: 768px) {
     .sidebar { display: none; }
@@ -1164,6 +1590,28 @@
       </div>
     </div>
 
+    <!-- Filter Bar (shown only on board view) -->
+    <div id="filter-bar" class="filter-bar" style="display:none;padding-top:12px;background:var(--surface);border-bottom:1px solid var(--border);">
+      <select class="filter-select" id="filter-label" onchange="applyFilters()">
+        <option value="">All labels</option>
+        <option value="Bug">Bug</option>
+        <option value="Feature">Feature</option>
+        <option value="Design">Design</option>
+        <option value="Research">Research</option>
+        <option value="Urgent">Urgent</option>
+        <option value="Personal">Personal</option>
+      </select>
+      <select class="filter-select" id="filter-due" onchange="applyFilters()">
+        <option value="">Any due date</option>
+        <option value="overdue">Overdue</option>
+        <option value="today">Due today</option>
+        <option value="week">Due this week</option>
+        <option value="none">No due date</option>
+      </select>
+      <input type="text" id="filter-assignee" class="filter-select" placeholder="Filter by assignee..." oninput="applyFilters()" style="border-radius:100px;min-width:160px">
+      <span class="filter-clear" onclick="clearFilters()" id="filter-clear-btn" style="display:none">✕ Clear filters</span>
+    </div>
+
     <!-- Home view -->
     <div id="home-view" class="home-view">
       <div class="home-greeting">Good <span id="time-greeting">day</span>, <span id="greeting-name">friend</span> 👋</div>
@@ -1375,6 +1823,7 @@ function showHome() {
   document.getElementById('home-view').classList.remove('hidden');
   document.getElementById('board-view-container').classList.add('hidden');
   document.getElementById('board-actions').style.display = 'none';
+  document.getElementById('filter-bar').style.display = 'none';
   document.getElementById('topbar-title').textContent = 'Home';
   document.getElementById('nav-home').classList.add('active');
   renderHomeView();
@@ -1412,6 +1861,7 @@ async function openBoard(boardId) {
   document.getElementById('home-view').classList.add('hidden');
   document.getElementById('board-view-container').classList.remove('hidden');
   document.getElementById('board-actions').style.display = 'flex';
+  document.getElementById('filter-bar').style.display = 'flex';
   document.getElementById('nav-home').classList.remove('active');
 
   // find board name
@@ -1465,6 +1915,34 @@ async function renderBoard(boardId) {
       tasksByCol[t.column_id].push(t);
     }
     columns = colData.map(col => ({ ...col, tasks: tasksByCol[col.id] || [] }));
+
+    // Fetch counts for card indicators (checklists, comments, attachments) in parallel
+    if (taskData.length > 0) {
+      const taskIds = taskData.map(t => t.id);
+      const [clRes, cmRes, atRes] = await Promise.all([
+        sb.from('checklist_items').select('id, checked, checklist_id, checklists!inner(task_id)').in('checklists.task_id', taskIds),
+        sb.from('comments').select('id, task_id').in('task_id', taskIds),
+        sb.from('attachments').select('id, task_id').in('task_id', taskIds),
+      ]);
+
+      // Build count maps
+      const checkTotals = {}, checkDones = {}, commentCounts = {}, attachCounts = {};
+      for (const item of (clRes.data || [])) {
+        const tid = item.checklists?.task_id;
+        if (!tid) continue;
+        checkTotals[tid] = (checkTotals[tid] || 0) + 1;
+        if (item.checked) checkDones[tid] = (checkDones[tid] || 0) + 1;
+      }
+      for (const c of (cmRes.data || [])) commentCounts[c.task_id] = (commentCounts[c.task_id] || 0) + 1;
+      for (const a of (atRes.data || [])) attachCounts[a.task_id] = (attachCounts[a.task_id] || 0) + 1;
+
+      for (const t of taskData) {
+        t._checkTotal = checkTotals[t.id] || 0;
+        t._checkDone = checkDones[t.id] || 0;
+        t._commentCount = commentCounts[t.id] || 0;
+        t._attachCount = attachCounts[t.id] || 0;
+      }
+    }
 
     // Cache for openTask() to use without re-fetching
     boardCache[boardId] = {};
@@ -1525,6 +2003,10 @@ function renderTaskCard(task) {
   const labels = task.labels || [];
   const dueDate = task.due_date ? formatDue(task.due_date) : null;
   const initials = task.assignee_name ? task.assignee_name.slice(0,2).toUpperCase() : null;
+  const checkTotal = task._checkTotal || 0;
+  const checkDone = task._checkDone || 0;
+  const commentCount = task._commentCount || 0;
+  const attachCount = task._attachCount || 0;
 
   return `
     <div class="task-card" data-task-id="${task.id}" draggable="true"
@@ -1539,10 +2021,22 @@ function renderTaskCard(task) {
           }).join('')}
         </div>` : ''}
       <div class="task-card-title">${escHtml(task.title)}</div>
-      <div class="task-card-meta">
+      <div class="task-card-footer">
         ${dueDate ? `<div class="task-due ${dueDate.cls}">
           <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><rect x="1" y="2" width="10" height="9" rx="1.5" stroke="currentColor" stroke-width="1.2"/><path d="M4 1V3M8 1V3M1 5H11" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
           ${dueDate.label}
+        </div>` : ''}
+        ${checkTotal > 0 ? `<div class="card-indicator ${checkDone === checkTotal ? 'done' : ''}">
+          <svg viewBox="0 0 11 11" fill="none"><rect x="0.5" y="0.5" width="10" height="10" rx="2" stroke="currentColor" stroke-width="1.2"/>${checkDone === checkTotal ? '<path d="M2.5 5.5L4.5 7.5L8.5 3.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>' : ''}</svg>
+          ${checkDone}/${checkTotal}
+        </div>` : ''}
+        ${commentCount > 0 ? `<div class="card-indicator">
+          <svg viewBox="0 0 11 11" fill="none"><path d="M1 1h9v7H6.5L4 10V8H1V1z" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/></svg>
+          ${commentCount}
+        </div>` : ''}
+        ${attachCount > 0 ? `<div class="card-indicator">
+          <svg viewBox="0 0 11 11" fill="none"><path d="M9 5.5L5 9.5a3 3 0 01-4-4L6 1a2 2 0 013 3L4 9a1 1 0 01-1-1l4-4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+          ${attachCount}
         </div>` : ''}
         ${initials ? `<div class="task-assignee" style="margin-left:auto">${initials}</div>` : ''}
       </div>
@@ -1561,7 +2055,6 @@ function formatDue(dateStr) {
 
 // ─── TASK DETAIL ───
 async function openTask(taskId) {
-  // Use cached data if available, fall back to fetch
   let task = boardCache[currentBoardId]?.[taskId];
   if (!task) {
     const { data } = await sb.from('tasks').select('*').eq('id', taskId).single();
@@ -1570,9 +2063,9 @@ async function openTask(taskId) {
   if (!task) return;
 
   const labels = task.labels || [];
-  const modal = createModal('task-detail', `
-    <div class="modal task-detail-modal">
-      <div class="modal-header">
+  createModal('task-detail', `
+    <div class="modal task-detail-modal" style="max-width:680px">
+      <div class="modal-header" style="padding-bottom:12px">
         <div style="flex:1">
           <textarea class="task-detail-title" id="detail-title" rows="1" oninput="autoResize(this)">${escHtml(task.title)}</textarea>
         </div>
@@ -1580,7 +2073,17 @@ async function openTask(taskId) {
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 4L12 12M12 4L4 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
         </div>
       </div>
-      <div class="modal-body">
+
+      <div class="detail-tabs">
+        <div class="detail-tab active" onclick="switchDetailTab(this,'tab-details')">Details</div>
+        <div class="detail-tab" onclick="switchDetailTab(this,'tab-checklist')">Checklist</div>
+        <div class="detail-tab" onclick="switchDetailTab(this,'tab-comments')">Comments</div>
+        <div class="detail-tab" onclick="switchDetailTab(this,'tab-fields')">Custom Fields</div>
+        <div class="detail-tab" onclick="switchDetailTab(this,'tab-attachments')">Attachments</div>
+      </div>
+
+      <!-- TAB: Details -->
+      <div id="tab-details" class="detail-tab-content active">
         <div class="task-detail-meta">
           <div class="meta-item">
             <div class="meta-label">Due date</div>
@@ -1604,16 +2107,65 @@ async function openTask(taskId) {
         </div>
         <div class="meta-label" style="margin-top:18px;margin-bottom:8px">Description</div>
         <textarea id="detail-desc" placeholder="Add a description..." style="width:100%;border:1.5px solid var(--border);border-radius:8px;padding:10px 12px;font-family:var(--font);font-size:13.5px;color:var(--text);background:var(--bg);outline:none;resize:vertical;min-height:100px;line-height:1.6">${escHtml(task.description || '')}</textarea>
+        <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:16px">
+          <button class="btn btn-ghost btn-sm" onclick="deleteTask('${task.id}')">Delete task</button>
+          <button class="btn btn-ghost btn-sm" onclick="closeModal()">Cancel</button>
+          <button class="btn btn-primary btn-sm" style="width:auto;margin-top:0" onclick="saveTask('${task.id}')">Save changes</button>
+        </div>
       </div>
-      <div class="modal-footer">
-        <button class="btn btn-ghost btn-sm" onclick="deleteTask('${task.id}')">Delete</button>
-        <button class="btn btn-ghost btn-sm" onclick="closeModal()">Cancel</button>
-        <button class="btn btn-primary btn-sm" style="width:auto;margin-top:0" onclick="saveTask('${task.id}')">Save changes</button>
+
+      <!-- TAB: Checklist -->
+      <div id="tab-checklist" class="detail-tab-content">
+        <div id="checklists-container"><div style="color:var(--text-3);font-size:13px">Loading…</div></div>
+        <button class="btn btn-ghost btn-sm" style="margin-top:12px" onclick="addChecklist('${task.id}')">
+          + Add checklist
+        </button>
+      </div>
+
+      <!-- TAB: Comments -->
+      <div id="tab-comments" class="detail-tab-content">
+        <div id="comments-container"><div style="color:var(--text-3);font-size:13px">Loading…</div></div>
+        <div class="comment-input-row">
+          <div class="comment-avatar">${((currentUser?.user_metadata?.full_name || currentUser?.email || 'U').slice(0,2).toUpperCase())}</div>
+          <textarea id="new-comment-text" placeholder="Write a comment…" rows="1" oninput="autoResize(this)"></textarea>
+          <button class="btn btn-primary btn-sm" style="width:auto;margin:0;align-self:flex-end" onclick="postComment('${task.id}')">Post</button>
+        </div>
+      </div>
+
+      <!-- TAB: Custom Fields -->
+      <div id="tab-fields" class="detail-tab-content">
+        <div id="custom-fields-container"><div style="color:var(--text-3);font-size:13px">Loading…</div></div>
+        <div class="cf-manage-btn" onclick="showManageFieldsModal('${currentBoardId}','${task.id}')">⚙ Manage fields for this board</div>
+      </div>
+
+      <!-- TAB: Attachments -->
+      <div id="tab-attachments" class="detail-tab-content">
+        <div id="attachments-container"><div style="color:var(--text-3);font-size:13px">Loading…</div></div>
+        <div class="drop-zone" id="drop-zone-${task.id}" onclick="document.getElementById('file-input-${task.id}').click()"
+          ondragover="event.preventDefault();this.classList.add('dragover')"
+          ondragleave="this.classList.remove('dragover')"
+          ondrop="handleFileDrop(event,'${task.id}')">
+          <input type="file" id="file-input-${task.id}" multiple onchange="handleFileSelect(event,'${task.id}')">
+          <svg width="20" height="20" viewBox="0 0 20 20" fill="none" style="margin:0 auto 6px;display:block"><path d="M10 13V4M10 4L7 7M10 4L13 7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M3 14v2a1 1 0 001 1h12a1 1 0 001-1v-2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+          Click or drag files to attach
+        </div>
       </div>
     </div>
   `);
 
   autoResize(document.getElementById('detail-title'));
+  // Load checklist, comments, fields, attachments lazily
+  loadChecklists(task.id);
+  loadComments(task.id);
+  loadCustomFieldValues(task.id, currentBoardId);
+  loadAttachments(task.id);
+}
+
+function switchDetailTab(el, tabId) {
+  document.querySelectorAll('.detail-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.detail-tab-content').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById(tabId)?.classList.add('active');
 }
 
 function toggleLabel(el, name) {
@@ -2196,6 +2748,438 @@ async function sendInvite() {
   document.getElementById('invite-email').value = '';
   toast(`Invite sent to ${email}`);
   loadMembers();
+}
+
+
+// ─── FILTERS ───
+let activeFilters = { label: '', due: '', assignee: '' };
+
+function applyFilters() {
+  activeFilters.label = document.getElementById('filter-label')?.value || '';
+  activeFilters.due = document.getElementById('filter-due')?.value || '';
+  activeFilters.assignee = (document.getElementById('filter-assignee')?.value || '').toLowerCase().trim();
+
+  const hasFilter = activeFilters.label || activeFilters.due || activeFilters.assignee;
+  const clearBtn = document.getElementById('filter-clear-btn');
+  if (clearBtn) clearBtn.style.display = hasFilter ? 'inline' : 'none';
+
+  const now = new Date();
+  const weekEnd = new Date(now); weekEnd.setDate(weekEnd.getDate() + 7);
+
+  document.querySelectorAll('.task-card').forEach(card => {
+    const taskId = card.dataset.taskId;
+    const task = boardCache[currentBoardId]?.[taskId];
+    if (!task) return;
+
+    let show = true;
+
+    if (activeFilters.label) {
+      show = show && (task.labels || []).includes(activeFilters.label);
+    }
+
+    if (activeFilters.due) {
+      const due = task.due_date ? new Date(task.due_date) : null;
+      if (activeFilters.due === 'none') show = show && !due;
+      else if (activeFilters.due === 'overdue') show = show && due && due < now;
+      else if (activeFilters.due === 'today') show = show && due && due.toDateString() === now.toDateString();
+      else if (activeFilters.due === 'week') show = show && due && due >= now && due <= weekEnd;
+    }
+
+    if (activeFilters.assignee) {
+      show = show && (task.assignee_name || '').toLowerCase().includes(activeFilters.assignee);
+    }
+
+    card.style.display = show ? '' : 'none';
+  });
+}
+
+function clearFilters() {
+  document.getElementById('filter-label').value = '';
+  document.getElementById('filter-due').value = '';
+  document.getElementById('filter-assignee').value = '';
+  activeFilters = { label: '', due: '', assignee: '' };
+  document.getElementById('filter-clear-btn').style.display = 'none';
+  document.querySelectorAll('.task-card').forEach(c => c.style.display = '');
+}
+
+// ─── CHECKLISTS ───
+async function loadChecklists(taskId) {
+  const { data: checklists } = await sb.from('checklists')
+    .select('id, name, position, checklist_items(id, title, checked, due_date, position)')
+    .eq('task_id', taskId)
+    .order('position');
+
+  const el = document.getElementById('checklists-container');
+  if (!el) return;
+
+  if (!checklists || !checklists.length) {
+    el.innerHTML = `<div style="color:var(--text-3);font-size:13px">No checklists yet. Add one below.</div>`;
+    return;
+  }
+
+  el.innerHTML = checklists.map(cl => renderChecklist(cl)).join('');
+}
+
+function renderChecklist(cl) {
+  const items = (cl.checklist_items || []).sort((a,b) => a.position - b.position);
+  const total = items.length, done = items.filter(i => i.checked).length;
+  const pct = total ? Math.round((done/total)*100) : 0;
+
+  return `
+    <div class="checklist-block" id="cl-${cl.id}">
+      <div class="checklist-header">
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="0.5" y="0.5" width="13" height="13" rx="2" stroke="currentColor" stroke-width="1.2"/><path d="M3 7l3 3 5-5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <div class="checklist-name">${escHtml(cl.name)}</div>
+        <div class="checklist-progress">${done}/${total}</div>
+        <div class="checklist-delete-btn" onclick="deleteChecklist('${cl.id}')">Delete</div>
+      </div>
+      ${total > 0 ? `<div class="progress-bar-wrap"><div class="progress-bar-fill" style="width:${pct}%"></div></div>` : ''}
+      <div id="cl-items-${cl.id}">
+        ${items.map(item => renderChecklistItem(item)).join('')}
+      </div>
+      <div class="add-checklist-item">
+        <input type="text" id="new-item-${cl.id}" placeholder="Add an item…"
+          onkeydown="if(event.key==='Enter'){addChecklistItem('${cl.id}',this.closest('[id]').id.replace('cl-items-','').startsWith('cl-')?null:null);addChecklistItem('${cl.id}')}">
+        <button class="btn btn-ghost btn-sm" onclick="addChecklistItem('${cl.id}')">Add</button>
+      </div>
+    </div>`;
+}
+
+function renderChecklistItem(item) {
+  const due = item.due_date ? formatDue(item.due_date) : null;
+  return `
+    <div class="checklist-item" id="ci-${item.id}">
+      <input type="checkbox" ${item.checked ? 'checked' : ''} onchange="toggleCheckItem('${item.id}',this.checked)">
+      <div class="checklist-item-text ${item.checked ? 'done' : ''}">${escHtml(item.title)}</div>
+      ${due ? `<div class="checklist-item-due ${due.cls}">
+        <svg width="10" height="10" viewBox="0 0 12 12" fill="none"><rect x="1" y="2" width="10" height="9" rx="1.5" stroke="currentColor" stroke-width="1.2"/><path d="M4 1V3M8 1V3M1 5H11" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+        ${due.label}
+      </div>` : ''}
+      <div class="checklist-item-del" onclick="deleteChecklistItem('${item.id}')">
+        <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 2l6 6M8 2L2 8" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+      </div>
+    </div>`;
+}
+
+async function addChecklist(taskId) {
+  const { data: existing } = await sb.from('checklists').select('position').eq('task_id', taskId).order('position', {ascending:false}).limit(1);
+  const pos = existing?.length ? (existing[0].position || 0) + 1 : 0;
+  await sb.from('checklists').insert({ task_id: taskId, name: 'Checklist', position: pos });
+  loadChecklists(taskId);
+}
+
+async function deleteChecklist(clId) {
+  if (!confirm('Delete this checklist and all its items?')) return;
+  await sb.from('checklists').delete().eq('id', clId);
+  document.getElementById(`cl-${clId}`)?.remove();
+  delete boardCache[currentBoardId];
+}
+
+async function addChecklistItem(clId) {
+  const input = document.getElementById(`new-item-${clId}`);
+  const title = input?.value.trim();
+  if (!title) return;
+  const { data: existing } = await sb.from('checklist_items').select('position').eq('checklist_id', clId).order('position', {ascending:false}).limit(1);
+  const pos = existing?.length ? (existing[0].position || 0) + 1 : 0;
+  const { data: item } = await sb.from('checklist_items').insert({ checklist_id: clId, title, position: pos }).select().single();
+  input.value = '';
+  const container = document.getElementById(`cl-items-${clId}`);
+  if (container && item) container.insertAdjacentHTML('beforeend', renderChecklistItem(item));
+  delete boardCache[currentBoardId];
+}
+
+async function toggleCheckItem(itemId, checked) {
+  await sb.from('checklist_items').update({ checked }).eq('id', itemId);
+  const el = document.querySelector(`#ci-${itemId} .checklist-item-text`);
+  if (el) el.classList.toggle('done', checked);
+  delete boardCache[currentBoardId];
+}
+
+async function deleteChecklistItem(itemId) {
+  await sb.from('checklist_items').delete().eq('id', itemId);
+  document.getElementById(`ci-${itemId}`)?.remove();
+  delete boardCache[currentBoardId];
+}
+
+// ─── COMMENTS ───
+async function loadComments(taskId) {
+  const { data: comments } = await sb.from('comments')
+    .select('*')
+    .eq('task_id', taskId)
+    .order('created_at');
+
+  const el = document.getElementById('comments-container');
+  if (!el) return;
+
+  if (!comments || !comments.length) {
+    el.innerHTML = `<div style="color:var(--text-3);font-size:13px;margin-bottom:8px">No comments yet. Be the first!</div>`;
+    return;
+  }
+
+  el.innerHTML = `<div class="comment-list">${comments.map(c => renderComment(c)).join('')}</div>`;
+}
+
+function renderComment(c) {
+  const initials = (c.user_name || 'U').slice(0,2).toUpperCase();
+  const time = new Date(c.created_at).toLocaleString('en', { month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' });
+  const isOwn = c.user_id === currentUser?.id;
+  return `
+    <div class="comment-row" id="cmt-${c.id}">
+      <div class="comment-avatar">${initials}</div>
+      <div class="comment-bubble">
+        <div class="comment-meta">
+          <div class="comment-author">${escHtml(c.user_name)}</div>
+          <div class="comment-time">${time}</div>
+          ${isOwn ? `<div class="comment-delete" onclick="deleteComment('${c.id}')">Delete</div>` : ''}
+        </div>
+        <div class="comment-text">${escHtml(c.content)}</div>
+      </div>
+    </div>`;
+}
+
+async function postComment(taskId) {
+  const textarea = document.getElementById('new-comment-text');
+  const content = textarea?.value.trim();
+  if (!content) return;
+
+  const userName = currentUser?.user_metadata?.full_name || currentUser?.email?.split('@')[0] || 'User';
+  const { data: comment, error } = await sb.from('comments').insert({
+    task_id: taskId, content, user_id: currentUser.id, user_name: userName
+  }).select().single();
+
+  if (error) { toast('Failed to post comment'); return; }
+
+  textarea.value = '';
+  textarea.style.height = 'auto';
+  const list = document.querySelector('#comments-container .comment-list');
+  const emptyMsg = document.querySelector('#comments-container div');
+  if (list) {
+    list.insertAdjacentHTML('beforeend', renderComment(comment));
+  } else {
+    document.getElementById('comments-container').innerHTML = `<div class="comment-list">${renderComment(comment)}</div>`;
+  }
+  delete boardCache[currentBoardId];
+}
+
+async function deleteComment(commentId) {
+  if (!confirm('Delete this comment?')) return;
+  await sb.from('comments').delete().eq('id', commentId);
+  document.getElementById(`cmt-${commentId}`)?.remove();
+  delete boardCache[currentBoardId];
+}
+
+// ─── CUSTOM FIELDS ───
+async function loadCustomFieldValues(taskId, boardId) {
+  const el = document.getElementById('custom-fields-container');
+  if (!el) return;
+
+  const [{ data: fields }, { data: values }] = await Promise.all([
+    sb.from('custom_fields').select('*').eq('board_id', boardId).order('position'),
+    sb.from('custom_field_values').select('*').eq('task_id', taskId)
+  ]);
+
+  if (!fields || !fields.length) {
+    el.innerHTML = `<div style="color:var(--text-3);font-size:13px">No custom fields yet. Add some below.</div>`;
+    return;
+  }
+
+  const valMap = {};
+  for (const v of (values || [])) valMap[v.custom_field_id] = v.value || '';
+
+  el.innerHTML = fields.map(f => {
+    const val = valMap[f.id] || '';
+    let input = '';
+    if (f.field_type === 'text') {
+      input = `<input class="cf-value" type="text" value="${escHtml(val)}" placeholder="Enter text…" onchange="saveCFValue('${taskId}','${f.id}',this.value)">`;
+    } else if (f.field_type === 'number') {
+      input = `<input class="cf-value" type="number" value="${escHtml(val)}" placeholder="0" onchange="saveCFValue('${taskId}','${f.id}',this.value)">`;
+    } else if (f.field_type === 'date') {
+      input = `<input class="cf-value" type="date" value="${escHtml(val)}" onchange="saveCFValue('${taskId}','${f.id}',this.value)">`;
+    } else if (f.field_type === 'dropdown') {
+      const opts = f.options || [];
+      input = `<select class="cf-value" onchange="saveCFValue('${taskId}','${f.id}',this.value)">
+        <option value="">— select —</option>
+        ${opts.map(o => `<option value="${escHtml(o)}" ${val===o?'selected':''}>${escHtml(o)}</option>`).join('')}
+      </select>`;
+    }
+    return `<div class="custom-field-row"><div class="cf-name">${escHtml(f.name)}</div>${input}</div>`;
+  }).join('');
+}
+
+async function saveCFValue(taskId, fieldId, value) {
+  await sb.from('custom_field_values')
+    .upsert({ task_id: taskId, custom_field_id: fieldId, value }, { onConflict: 'task_id,custom_field_id' });
+}
+
+function showManageFieldsModal(boardId, taskId) {
+  createModal('manage-fields', `
+    <div class="modal">
+      <div class="modal-header">
+        <div class="modal-title">Manage Custom Fields</div>
+        <div class="modal-close" onclick="closeModal();openTask('${taskId}')">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M4 4L12 12M12 4L4 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        </div>
+      </div>
+      <div class="modal-body">
+        <div id="fields-list-${boardId}"><div style="color:var(--text-3);font-size:13px">Loading…</div></div>
+        <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border)">
+          <div style="font-size:12px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">Add New Field</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <input type="text" id="new-cf-name" placeholder="Field name" style="flex:1;min-width:120px;padding:8px 12px;border:1.5px solid var(--border);border-radius:var(--radius);font-family:var(--font);font-size:13px;outline:none">
+            <select id="new-cf-type" style="padding:8px 12px;border:1.5px solid var(--border);border-radius:var(--radius);font-family:var(--font);font-size:13px;outline:none;background:var(--bg)">
+              <option value="text">Text</option>
+              <option value="number">Number</option>
+              <option value="date">Date</option>
+              <option value="dropdown">Dropdown</option>
+            </select>
+          </div>
+          <div id="dropdown-opts-wrap" style="display:none;margin-top:8px">
+            <input type="text" id="new-cf-opts" placeholder="Options separated by commas (e.g. Low, Medium, High)" style="width:100%;padding:8px 12px;border:1.5px solid var(--border);border-radius:var(--radius);font-family:var(--font);font-size:13px;outline:none">
+          </div>
+          <button class="btn btn-primary btn-sm" style="width:auto;margin-top:10px" onclick="createCustomField('${boardId}','${taskId}')">Add Field</button>
+        </div>
+      </div>
+    </div>
+  `);
+
+  document.getElementById('new-cf-type')?.addEventListener('change', function() {
+    document.getElementById('dropdown-opts-wrap').style.display = this.value === 'dropdown' ? 'block' : 'none';
+  });
+
+  loadFieldsList(boardId, taskId);
+}
+
+async function loadFieldsList(boardId, taskId) {
+  const { data: fields } = await sb.from('custom_fields').select('*').eq('board_id', boardId).order('position');
+  const el = document.getElementById(`fields-list-${boardId}`);
+  if (!el) return;
+  if (!fields?.length) { el.innerHTML = `<div style="color:var(--text-3);font-size:13px">No fields yet.</div>`; return; }
+  el.innerHTML = fields.map(f => `
+    <div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--border)">
+      <div style="flex:1;font-size:13.5px">${escHtml(f.name)}</div>
+      <div style="font-size:12px;color:var(--text-3);background:var(--surface-2);padding:2px 8px;border-radius:100px">${f.field_type}</div>
+      <div style="font-size:12px;color:var(--danger);cursor:pointer;padding:3px 8px;border-radius:4px" onmouseover="this.style.background='#FEF2F2'" onmouseout="this.style.background=''" onclick="deleteCustomField('${f.id}','${boardId}','${taskId}')">Delete</div>
+    </div>`).join('');
+}
+
+async function createCustomField(boardId, taskId) {
+  const name = document.getElementById('new-cf-name')?.value.trim();
+  const field_type = document.getElementById('new-cf-type')?.value;
+  if (!name) { toast('Enter a field name'); return; }
+
+  const options = field_type === 'dropdown'
+    ? (document.getElementById('new-cf-opts')?.value || '').split(',').map(s => s.trim()).filter(Boolean)
+    : null;
+
+  const { data: existing } = await sb.from('custom_fields').select('position').eq('board_id', boardId).order('position',{ascending:false}).limit(1);
+  const pos = existing?.length ? (existing[0].position||0)+1 : 0;
+
+  await sb.from('custom_fields').insert({ board_id: boardId, name, field_type, options, position: pos });
+  loadFieldsList(boardId, taskId);
+  document.getElementById('new-cf-name').value = '';
+  toast('Field added');
+}
+
+async function deleteCustomField(fieldId, boardId, taskId) {
+  if (!confirm('Delete this field and all its values?')) return;
+  await sb.from('custom_fields').delete().eq('id', fieldId);
+  loadFieldsList(boardId, taskId);
+  toast('Field deleted');
+}
+
+// ─── ATTACHMENTS ───
+async function loadAttachments(taskId) {
+  const { data: attachments } = await sb.from('attachments').select('*').eq('task_id', taskId).order('created_at');
+  const el = document.getElementById('attachments-container');
+  if (!el) return;
+
+  if (!attachments?.length) {
+    el.innerHTML = `<div style="color:var(--text-3);font-size:13px;margin-bottom:8px">No attachments yet.</div>`;
+    return;
+  }
+
+  el.innerHTML = `<div class="attachment-list">${attachments.map(a => renderAttachment(a)).join('')}</div>`;
+}
+
+function renderAttachment(a) {
+  const ext = a.name.split('.').pop().toLowerCase();
+  const icon = ['jpg','jpeg','png','gif','webp'].includes(ext) ? '🖼️' :
+               ['pdf'].includes(ext) ? '📄' :
+               ['doc','docx'].includes(ext) ? '📝' :
+               ['xls','xlsx'].includes(ext) ? '📊' :
+               ['zip','rar'].includes(ext) ? '🗜️' : '📎';
+  const size = a.size ? (a.size < 1024*1024 ? Math.round(a.size/1024)+'KB' : (a.size/1024/1024).toFixed(1)+'MB') : '';
+  return `
+    <div class="attachment-row" id="att-${a.id}">
+      <div class="attachment-icon">${icon}</div>
+      <div class="attachment-info">
+        <div class="attachment-name">${escHtml(a.name)}</div>
+        <div class="attachment-meta">${size}</div>
+      </div>
+      <a class="attachment-download" onclick="downloadAttachment('${a.storage_path}','${escHtml(a.name)}')">Download</a>
+      <div class="attachment-del" onclick="deleteAttachment('${a.id}','${a.storage_path}')">
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2 2l8 8M10 2L2 10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      </div>
+    </div>`;
+}
+
+async function handleFileSelect(event, taskId) {
+  const files = [...event.target.files];
+  if (!files.length) return;
+  await uploadFiles(files, taskId);
+}
+
+async function handleFileDrop(event, taskId) {
+  event.preventDefault();
+  document.getElementById(`drop-zone-${taskId}`)?.classList.remove('dragover');
+  const files = [...event.dataTransfer.files];
+  if (!files.length) return;
+  await uploadFiles(files, taskId);
+}
+
+async function uploadFiles(files, taskId) {
+  const dropZone = document.getElementById(`drop-zone-${taskId}`);
+  if (dropZone) dropZone.textContent = `Uploading ${files.length} file(s)…`;
+
+  for (const file of files) {
+    const path = `${currentUser.id}/${taskId}/${Date.now()}_${file.name}`;
+    const { error: upErr } = await sb.storage.from('attachments').upload(path, file);
+    if (upErr) { toast(`Failed to upload ${file.name}`); continue; }
+
+    await sb.from('attachments').insert({
+      task_id: taskId,
+      name: file.name,
+      size: file.size,
+      mime_type: file.type,
+      storage_path: path,
+      uploaded_by: currentUser.id
+    });
+  }
+
+  delete boardCache[currentBoardId];
+  loadAttachments(taskId);
+
+  if (dropZone) {
+    dropZone.innerHTML = `<svg width="20" height="20" viewBox="0 0 20 20" fill="none" style="margin:0 auto 6px;display:block"><path d="M10 13V4M10 4L7 7M10 4L13 7" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/><path d="M3 14v2a1 1 0 001 1h12a1 1 0 001-1v-2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>Click or drag files to attach`;
+  }
+}
+
+async function downloadAttachment(path, name) {
+  const { data } = await sb.storage.from('attachments').createSignedUrl(path, 60);
+  if (!data?.signedUrl) { toast('Could not get download link'); return; }
+  const a = document.createElement('a');
+  a.href = data.signedUrl;
+  a.download = name;
+  a.click();
+}
+
+async function deleteAttachment(attachId, path) {
+  if (!confirm('Delete this attachment?')) return;
+  await sb.storage.from('attachments').remove([path]);
+  await sb.from('attachments').delete().eq('id', attachId);
+  document.getElementById(`att-${attachId}`)?.remove();
+  delete boardCache[currentBoardId];
+  toast('Attachment deleted');
 }
 
 // ─── AUTH ───
