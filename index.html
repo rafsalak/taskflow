@@ -1844,17 +1844,28 @@ async function loadApp() {
 
 // Returns [{email, display_name}] for everyone in the current workspace
 async function getWorkspaceMembers() {
-  // Members listed in workspace_members
+  // 1. Owner profile (looked up by user_id)
+  const { data: ownerProfile } = await sb.from('profiles')
+    .select('email, display_name')
+    .eq('user_id', currentWorkspace.owner_id)
+    .maybeSingle();
+
+  // 2. Member emails from workspace_members
   const { data: memberRows } = await sb.from('workspace_members')
     .select('email')
     .eq('workspace_id', currentWorkspace.id);
   const memberEmails = (memberRows || []).map(m => m.email);
 
-  // Owner profile (by user_id) + member profiles (by email)
-  let orFilter = `user_id.eq.${currentWorkspace.owner_id}`;
-  if (memberEmails.length) orFilter += `,email.in.(${memberEmails.join(',')})`;
-  const { data: profiles } = await sb.from('profiles').select('email, display_name').or(orFilter);
-  return profiles || [];
+  // 3. Member profiles (looked up by email)
+  let memberProfiles = [];
+  if (memberEmails.length) {
+    const { data } = await sb.from('profiles')
+      .select('email, display_name')
+      .in('email', memberEmails);
+    memberProfiles = data || [];
+  }
+
+  return [...(ownerProfile ? [ownerProfile] : []), ...memberProfiles];
 }
 
 function showAuthScreen() {
