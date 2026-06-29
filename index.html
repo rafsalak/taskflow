@@ -1741,7 +1741,9 @@
         <option value="week">Due this week</option>
         <option value="none">No due date</option>
       </select>
-      <input type="text" id="filter-assignee" class="filter-select" placeholder="Filter by assignee..." oninput="applyFilters()" style="border-radius:100px;min-width:160px">
+      <select id="filter-assignee" class="filter-select" onchange="applyFilters()" style="border-radius:100px;min-width:160px">
+        <option value="">Any assignee</option>
+      </select>
       <span class="filter-clear" onclick="clearFilters()" id="filter-clear-btn" style="display:none">✕ Clear filters</span>
     </div>
 
@@ -1830,8 +1832,29 @@ async function loadApp() {
   updateUserUI();
   setTimeGreeting();
   await ensureWorkspace();
+  // Upsert this user's profile so teammates can see their display name
+  await sb.from('profiles').upsert({
+    user_id: currentUser.id,
+    email: currentUser.email,
+    display_name: currentUser.user_metadata?.full_name || currentUser.email.split('@')[0]
+  }, { onConflict: 'user_id' });
   await loadProjects();
   renderHomeView();
+}
+
+// Returns [{email, display_name}] for everyone in the current workspace
+async function getWorkspaceMembers() {
+  // Members listed in workspace_members
+  const { data: memberRows } = await sb.from('workspace_members')
+    .select('email')
+    .eq('workspace_id', currentWorkspace.id);
+  const memberEmails = (memberRows || []).map(m => m.email);
+
+  // Owner profile (by user_id) + member profiles (by email)
+  let orFilter = `user_id.eq.${currentWorkspace.owner_id}`;
+  if (memberEmails.length) orFilter += `,email.in.(${memberEmails.join(',')})`;
+  const { data: profiles } = await sb.from('profiles').select('email, display_name').or(orFilter);
+  return profiles || [];
 }
 
 function showAuthScreen() {
@@ -2011,6 +2034,16 @@ async function openBoard(boardId) {
   if (bi) bi.classList.add('active');
 
   await renderBoard(boardId);
+  populateAssigneeFilter();
+}
+
+async function populateAssigneeFilter() {
+  const sel = document.getElementById('filter-assignee');
+  if (!sel) return;
+  const members = await getWorkspaceMembers();
+  const current = sel.value;
+  sel.innerHTML = '<option value="">Any assignee</option>' +
+    members.map(m => `<option value="${escHtml(m.display_name)}" ${current === m.display_name ? 'selected' : ''}>${escHtml(m.display_name)}</option>`).join('');
 }
 
 async function renderBoard(boardId) {
@@ -2207,6 +2240,14 @@ async function openTask(taskId) {
 
   const labels = task.labels || [];
   const userInitials = (currentUser?.user_metadata?.full_name || currentUser?.email || 'U').slice(0,2).toUpperCase();
+  const wsMembers = await getWorkspaceMembers();
+  const assigneeOptions = wsMembers.map(m =>
+    `<option value="${escHtml(m.display_name)}" ${task.assignee_name === m.display_name ? 'selected' : ''}>${escHtml(m.display_name)}</option>`
+  ).join('');
+  const assigneeSelect = `<select id="detail-assignee" class="detail-meta-input">
+    <option value="">— None —</option>
+    ${assigneeOptions}
+  </select>`;
 
   createModal('task-detail', `
     <div class="modal task-detail-modal">
@@ -2236,7 +2277,7 @@ async function openTask(taskId) {
           </div>
           <div class="meta-item">
             <div class="meta-label">Assignee</div>
-            <input type="text" id="detail-assignee" placeholder="Name" value="${escHtml(task.assignee_name || '')}" class="detail-meta-input">
+            ${assigneeSelect}
           </div>
         </div>
 
@@ -2653,14 +2694,20 @@ async function createColumn() {
 
 // ─── NEW TASK MODAL ───
 function showNewTaskModal(columnId) {
-  const fetchCols = async () => {
-    const { data: cols } = await sb.from('columns').select('*').eq('board_id', currentBoardId).order('position');
-    return cols || [];
+  const fetchData = async () => {
+    const [colRes, members] = await Promise.all([
+      sb.from('columns').select('*').eq('board_id', currentBoardId).order('position'),
+      getWorkspaceMembers()
+    ]);
+    return { cols: colRes.data || [], members };
   };
 
-  fetchCols().then(cols => {
+  fetchData().then(({ cols, members }) => {
     if (!cols.length) { toast('Add a column first'); return; }
     const defaultCol = columnId || cols[0].id;
+    const memberOptions = members.map(m =>
+      `<option value="${escHtml(m.display_name)}">${escHtml(m.display_name)}</option>`
+    ).join('');
 
     createModal('new-task', `
       <div class="modal">
@@ -2689,7 +2736,10 @@ function showNewTaskModal(columnId) {
           </div>
           <div class="modal-field">
             <label>Assignee</label>
-            <input type="text" id="new-task-assignee" placeholder="Name">
+            <select id="new-task-assignee">
+              <option value="">— None —</option>
+              ${memberOptions}
+            </select>
           </div>
           <div class="modal-field">
             <label>Labels</label>
@@ -2714,7 +2764,7 @@ async function createTask() {
   const colId = document.getElementById('new-task-col').value;
   const start = document.getElementById('new-task-start').value || null;
   const due = document.getElementById('new-task-due').value || null;
-  const assignee = document.getElementById('new-task-assignee').value.trim() || null;
+  const assignee = document.getElementById('new-task-assignee').value || null;
   const labels = [...document.querySelectorAll('.label-chip.selected')].map(el => el.dataset.label);
 
   if (!title) { toast('Enter a task title'); return; }
@@ -3023,7 +3073,7 @@ let activeFilters = { label: '', due: '', assignee: '' };
 function applyFilters() {
   activeFilters.label = document.getElementById('filter-label')?.value || '';
   activeFilters.due = document.getElementById('filter-due')?.value || '';
-  activeFilters.assignee = (document.getElementById('filter-assignee')?.value || '').toLowerCase().trim();
+  activeFilters.assignee = document.getElementById('filter-assignee')?.value || '';
 
   const hasFilter = activeFilters.label || activeFilters.due || activeFilters.assignee;
   const clearBtn = document.getElementById('filter-clear-btn');
@@ -3052,7 +3102,7 @@ function applyFilters() {
     }
 
     if (activeFilters.assignee) {
-      show = show && (task.assignee_name || '').toLowerCase().includes(activeFilters.assignee);
+      show = show && (task.assignee_name || '') === activeFilters.assignee;
     }
 
     card.style.display = show ? '' : 'none';
