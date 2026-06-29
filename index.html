@@ -1862,19 +1862,7 @@ function setTimeGreeting() {
 
 // ─── WORKSPACE ───
 async function ensureWorkspace() {
-  // First check if user owns a workspace
-  const { data: ownedWs } = await sb.from('workspaces')
-    .select('*')
-    .eq('owner_id', currentUser.id)
-    .limit(1)
-    .maybeSingle();
-
-  if (ownedWs) {
-    currentWorkspace = ownedWs;
-    return;
-  }
-
-  // Check if invited as member to someone else's workspace
+  // Check membership first — if invited to someone's workspace, use that
   const { data: membership } = await sb.from('workspace_members')
     .select('workspace_id')
     .eq('email', currentUser.email)
@@ -1890,6 +1878,18 @@ async function ensureWorkspace() {
       currentWorkspace = sharedWs;
       return;
     }
+  }
+
+  // Then check if user owns a workspace
+  const { data: ownedWs } = await sb.from('workspaces')
+    .select('*')
+    .eq('owner_id', currentUser.id)
+    .limit(1)
+    .maybeSingle();
+
+  if (ownedWs) {
+    currentWorkspace = ownedWs;
+    return;
   }
 
   // No workspace found — create one
